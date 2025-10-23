@@ -17,11 +17,8 @@ CREATE TABLE IF NOT EXISTS user_devices (
 CREATE INDEX idx_user_devices_user_id ON user_devices(user_id);
 CREATE INDEX idx_user_devices_last_active ON user_devices(last_active);
 
--- Add system setting for max devices per user
-INSERT INTO system_settings (key, value, description, category, created_at, updated_at)
-VALUES 
-  ('max_devices_per_user', '3', 'Maximum number of devices a user can be logged in from simultaneously', 'security', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-ON CONFLICT (key) DO NOTHING;
+-- Note: system_settings table not available in current schema
+-- Add system setting for max devices per user manually if needed
 
 
 COMMENT ON TABLE user_devices IS 'Tracks user login devices and sessions';

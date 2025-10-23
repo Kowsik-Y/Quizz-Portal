@@ -3,19 +3,37 @@ const path = require('path');
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT || 5432,
-});
+// Use DATABASE_URL if provided (for Neon), otherwise use individual config
+const poolConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    }
+  : {
+      user: process.env.DB_USER,
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      password: process.env.DB_PASSWORD,
+      port: process.env.DB_PORT || 5432,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    };
+
+const pool = new Pool(poolConfig);
 
 async function runMigrations() {
   const client = await pool.connect();
   
   try {
     console.log('🚀 Starting migrations...\n');
+
+    // Migration 003: Add code_language column
+    console.log('📝 Running migration 003: Add code_language column to questions table');
+    const migration003 = fs.readFileSync(
+      path.join(__dirname, 'database/migrations/003_add_code_language.sql'),
+      'utf8'
+    );
+    await client.query(migration003);
+    console.log('✅ Migration 003 completed\n');
 
     // Migration 004: Add anti-cheating fields
     console.log('📝 Running migration 004: Add anti-cheating fields to tests table');

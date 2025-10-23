@@ -5,3 +5,6 @@ node_modules/
 dist/
 build/
 .vscode/
+logs/
+pm2-*.log
+ecosystem.config.js.backup
