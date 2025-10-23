@@ -2,21 +2,21 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/**/*.js",
+      "src": "src/server.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "src": "/(.*)",
+      "dest": "src/server.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   },
   "functions": {
-    "api/**/*.js": {
+    "src/server.js": {
       "maxDuration": 30
     }
   }
