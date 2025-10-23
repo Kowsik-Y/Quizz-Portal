@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "native",
-    "slug": "native",
+    "name": "Quiz Portal",
+    "slug": "quiz-portal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "native",
+    "scheme": "quiz-portal",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -24,7 +24,7 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": ["READ_PHONE_STATE", "READ_CALL_LOG", "READ_CONTACTS"],
-      "package": "com.kowsik_y.xnative"
+      "package": "com.kowsik_y.quizportal"
     },
     "web": {
       "bundler": "metro",

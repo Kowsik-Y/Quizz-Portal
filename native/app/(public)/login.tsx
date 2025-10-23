@@ -37,15 +37,16 @@ export default function LoginScreen() {
   return (
     <View className="flex-1 bg-background">
       <ScrollView
-        className="flex-1 p-4 pt-10"
+        className="flex-1 p-4"
         contentContainerStyle={{
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          minHeight: '100%'
         }}
         keyboardShouldPersistTaps="handled"
       >
         <View style={{ width: isWeb ? 550 : '100%', maxWidth: '100%' }}>
-          <View className="items-center mb-10">
+          <View className="items-center mb-6 sm:mb-10">
              <View className="w-28 h-28 rounded-full bg-primary items-center justify-center mb-6">
               <GraduationCap size={50} color="#fff" />
             </View>
