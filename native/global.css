@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    font-family: 'Poppins_400Regular';
+  }
+  
+  :root {
+    /* Quiz Portal Theme - Light Mode */
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 217.2 91.2% 59.8%; /* Blue-500 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 217.2 91.2% 59.8%; /* Blue-500 */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217.2 91.2% 59.8%; /* Blue-500 */
+    --radius: 0.75rem;
+    --chart-1: 217.2 91.2% 59.8%; /* Blue */
+    --chart-2: 142.1 76.2% 36.3%; /* Green */
+    --chart-3: 38 92% 50%; /* Orange */
+    --chart-4: 262.1 83.3% 57.8%; /* Purple */
+    --chart-5: 0 84.2% 60.2%; /* Red */
+    
+    /* Quiz Portal Specific Colors */
+    --quiz-success: 142.1 76.2% 36.3%; /* Green-500 */
+    --quiz-warning: 38 92% 50%; /* Orange-500 */
+    --quiz-danger: 0 84.2% 60.2%; /* Red-500 */
+    --quiz-info: 217.2 91.2% 59.8%; /* Blue-500 */
+    --quiz-purple: 262.1 83.3% 57.8%; /* Purple-500 */
+  }
+
+  .dark:root {
+    /* Quiz Portal Theme - Dark Mode */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 217.2 32.6% 17.5%;
+    --card-foreground: 210 40% 98%;
+    --popover: 217.2 32.6% 17.5%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%; /* Blue-500 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 91.2% 59.8%; /* Blue-500 */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --border: 217 33% 21.9%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 217.2 91.2% 59.8%; /* Blue-500 */
+    --chart-1: 217.2 91.2% 59.8%; /* Blue */
+    --chart-2: 142.1 70.6% 45.3%; /* Green */
+    --chart-3: 38 92% 50%; /* Orange */
+    --chart-4: 262.1 83.3% 57.8%; /* Purple */
+    --chart-5: 0 84.2% 60.2%; /* Red */
+    
+    /* Quiz Portal Specific Colors */
+    --quiz-success: 142.1 70.6% 45.3%; /* Green-500 */
+    --quiz-warning: 38 92% 50%; /* Orange-500 */
+    --quiz-danger: 0 84.2% 60.2%; /* Red-500 */
+    --quiz-info: 217.2 91.2% 59.8%; /* Blue-500 */
+    --quiz-purple: 262.1 83.3% 57.8%; /* Purple-500 */
+  }
+}
+
+/* Quiz Portal Utility Classes */
+@layer utilities {
+  .bg-quiz-success {
+    background-color: hsl(var(--quiz-success));
+  }
+  
+  .bg-quiz-warning {
+    background-color: hsl(var(--quiz-warning));
+  }
+  
+  .bg-quiz-danger {
+    background-color: hsl(var(--quiz-danger));
+  }
+  
+  .bg-quiz-info {
+    background-color: hsl(var(--quiz-info));
+  }
+  
+  .bg-quiz-purple {
+    background-color: hsl(var(--quiz-purple));
+  }
+  
+  .text-quiz-success {
+    color: hsl(var(--quiz-success));
+  }
+  
+  .text-quiz-warning {
+    color: hsl(var(--quiz-warning));
+  }
+  
+  .text-quiz-danger {
+    color: hsl(var(--quiz-danger));
+  }
+  
+  .text-quiz-info {
+    color: hsl(var(--quiz-info));
+  }
+  
+  .text-quiz-purple {
+    color: hsl(var(--quiz-purple));
+  }
+  
+  .border-quiz-primary {
+    border-color: hsl(var(--primary));
+  }
+  input:focus{
+    outline: none;
+    border: none;
+  }
+  
+  /* Anti-Screenshot Protection - Makes content unreadable in screenshots */
+  @media screen {
+    .anti-screenshot-protection::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 255, 255, 0.01) 10px,
+        rgba(255, 255, 255, 0.01) 20px
+      );
+      mix-blend-mode: difference;
+      opacity: 0;
+      transition: opacity 0.1s;
+    }
+    
+    /* Activate protection during screenshot (brief flash detection) */
+    .anti-screenshot-protection:active::before,
+    .anti-screenshot-protection:focus::before {
+      opacity: 0.3;
+    }
+  }
+}
+
+
