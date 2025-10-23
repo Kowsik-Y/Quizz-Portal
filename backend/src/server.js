@@ -42,19 +42,14 @@ const logger = winston.createLogger({
   ),
   defaultMeta: { service: 'quiz-portal-backend' },
   transports: [
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    })
   ],
 });
-
-if (!isProduction) {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    )
-  }));
-}
 
 // Rate limiting
 const limiter = rateLimit({
@@ -72,15 +67,7 @@ app.use(helmet({
 app.use(compression()); // Enable gzip compression
 app.use(limiter); // Apply rate limiting
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests from multiple frontend URLs (for mobile and web)
-    const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:8081').split(',');
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Allow all origins
   credentials: true
 }));
 app.use(cookieParser());
