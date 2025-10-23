@@ -1,0 +1,333 @@
+import { View, ScrollView, Pressable, TextInput, Platform, Dimensions, RefreshControl } from 'react-native';
+import { Text } from '@/components/ui/text';
+import { Search, Clock, BookOpen, CheckCircle, FileText, Calendar, PlayCircle, AlertCircle } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
+import { useState, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useTestStore } from '@/stores/testStore';
+import { LoadingState } from '@/components/LoadingState';
+import { showToast } from '@/lib/toast';
+
+export default function TestsPage() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'available' | 'completed'>('available');
+  const isWeb = Platform.OS === 'web';
+  const router = useRouter();
+
+  // Zustand store
+  const { tests, loading, error, refreshing, fetchTests, refreshData } = useTestStore();
+
+  const screenWidth = Dimensions.get('window').width;
+  const isLargeScreen = screenWidth > 768;
+  const numColumns = isWeb ? (isLargeScreen ? 3 : 2) : 1;
+
+
+  // Fetch tests on mount
+  useEffect(() => {
+    fetchTests();
+  }, []);
+
+  // Filter tests based on search - with safety check
+  const filteredTests = Array.isArray(tests)
+    ? tests.filter(test =>
+      test.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      test.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    : [];
+
+  // Check if test can be taken
+  const canTakeTest = (test: any) => {
+    if (!test.is_active) return false;
+
+    // Check if test type is 'instant' or if booking exists
+    if (test.test_type === 'instant') return true;
+
+    // For booking tests, check if user has booked
+    // This would come from the bookings store
+    return false;
+  };
+
+  const TabButton = ({ title, isActive, onPress }: any) => (
+    <Pressable
+      onPress={onPress}
+      className={`flex-1 py-3 rounded-lg ${isActive
+        ? 'bg-blue-500'
+        : isDark
+          ? 'bg-gray-800'
+          : 'bg-gray-100'
+        }`}
+    >
+      <Text
+        className={`text-center font-semibold ${isActive ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-600'
+          }`}
+      >
+        {title}
+      </Text>
+    </Pressable>
+  );
+
+  const TestCard = ({ test }: any) => {
+    const isCompleted = false; // TODO: Get from attempts
+    const score = 0; // TODO: Get from attempts
+    const testCanBeTaken = canTakeTest(test);
+
+    return (
+      <Pressable
+        onPress={() => router.push(`/tests/test-details?id=${test.id}` as any)}
+        className={`rounded-xl p-5 mb-4 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+          }`}
+        style={{
+          width: isWeb
+            ? numColumns === 3
+              ? '32%'
+              : '48.5%'
+            : '100%',
+        }}
+      >
+        <View className="flex-row items-start justify-between mb-3">
+          <View className="flex-1">
+            <Text
+              className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+              numberOfLines={2}
+            >
+              {test.title}
+            </Text>
+            <Text
+              className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
+              numberOfLines={2}
+            >
+              {test.description}
+            </Text>
+          </View>
+          {isCompleted && (
+            <View className="bg-green-500 rounded-full px-3 py-1 ml-2">
+              <Text className="text-white font-semibold text-sm">{score}%</Text>
+            </View>
+          )}
+          {!test.is_active && (
+            <View className="bg-red-500 rounded-full px-3 py-1 ml-2">
+              <Text className="text-white font-semibold text-xs">Inactive</Text>
+            </View>
+          )}
+        </View>
+
+        <View className="flex-row items-center gap-4 mb-4">
+          <View className="flex-row items-center">
+            <BookOpen size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
+            <Text className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              {test.questions_count || 0} questions
+            </Text>
+          </View>
+          <View className="flex-row items-center">
+            <Clock size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
+            <Text className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              {test.duration_minutes} min
+            </Text>
+          </View>
+        </View>
+
+        {/* Type Badge */}
+        <View className="mb-3">
+          <View className={`self-start px-3 py-1 rounded-full ${test.test_type === 'instant' ? 'bg-green-100' :
+            test.test_type === 'booking' ? 'bg-blue-100' : 'bg-yellow-100'
+            }`}>
+            <Text className={`text-xs font-semibold ${test.test_type === 'instant' ? 'text-green-700' :
+              test.test_type === 'booking' ? 'text-blue-700' : 'text-yellow-700'
+              }`}>
+              {test.test_type === 'instant' ? '⚡ Instant' :
+                test.test_type === 'booking' ? '📅 Booking Required' : '⏰ Timed'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View className="gap-2 mb-3">
+          {/* Materials Button */}
+          <Pressable
+            onPress={(e: any) => {
+              e?.stopPropagation?.();
+              router.push(`/courses/course-details?id=${test.course_id}` as any);
+            }}
+            className={`flex-row items-center justify-center py-2.5 rounded-lg ${isDark ? 'bg-blue-900/30 border border-blue-700' : 'bg-blue-50 border border-blue-200'
+              }`}
+          >
+            <FileText size={16} color={isDark ? '#60a5fa' : '#3b82f6'} />
+            <Text className={`ml-2 font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+              Materials
+            </Text>
+          </Pressable>
+
+          {/* Book Slot Button - Only for booking type tests */}
+          {test.test_type === 'booking' && (
+            <Pressable
+              onPress={(e: any) => {
+                e?.stopPropagation?.();
+                router.push(`/tests/book-test?id=${test.id}` as any);
+              }}
+              className={`flex-row items-center justify-center py-2.5 rounded-lg ${isDark ? 'bg-purple-900/30 border border-purple-700' : 'bg-purple-50 border border-purple-200'
+                }`}
+            >
+              <Calendar size={16} color={isDark ? '#c084fc' : '#9333ea'} />
+              <Text className={`ml-2 font-semibold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+                Book Slot
+              </Text>
+            </Pressable>
+          )}
+        </View>
+
+        {/* Take Test / Review Buttons */}
+        <View className="flex-row gap-2">
+          {isCompleted ? (
+            <>
+              <Pressable
+                onPress={(e: any) => {
+                  e?.stopPropagation?.();
+                  router.push(`/tests/review?id=${test.id}` as any);
+                }}
+                className="flex-1 bg-blue-500 rounded-lg py-3"
+              >
+                <Text className="text-white font-semibold text-center">Review Answers</Text>
+              </Pressable>
+              <Pressable
+                onPress={(e: any) => {
+                  e?.stopPropagation?.();
+                  if (testCanBeTaken) {
+                    router.push(`/tests/take-test?id=${test.id}` as any);
+                  } else {
+                    showToast.warning('Book a slot first', { title: 'Booking Required' });
+                  }
+                }}
+                className={`flex-1 rounded-lg py-3 ${isDark ? 'bg-gray-700' : 'bg-gray-100'
+                  }`}
+              >
+                <Text
+                  className={`font-semibold text-center ${isDark ? 'text-gray-300' : 'text-gray-700'
+                    }`}
+                >
+                  Retake
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <Pressable
+              onPress={(e: any) => {
+                e?.stopPropagation?.();
+                if (!test.is_active) {
+                  showToast.error('This test is currently not active', { title: 'Test Inactive' });
+                  return;
+                }
+                if (testCanBeTaken) {
+                  router.push(`/tests/take-test?id=${test.id}` as any);
+                } else if (test.test_type === 'booking') {
+                  showToast.warning('Please book a slot first', { title: 'Booking Required' });
+                  router.push(`/tests/book-test?id=${test.id}` as any);
+                } else {
+                  showToast.error('Test is not available at this time', { title: 'Cannot Take Test' });
+                }
+              }}
+              disabled={!test.is_active}
+              className={`flex-1 rounded-lg py-3 flex-row items-center justify-center ${testCanBeTaken && test.is_active ? 'bg-green-500' : 'bg-gray-400'
+                }`}
+            >
+              {testCanBeTaken && test.is_active ? (
+                <>
+                  <PlayCircle size={18} color="white" />
+                  <Text className="text-white font-semibold text-center ml-2">Take Test</Text>
+                </>
+              ) : (
+                <>
+                  <AlertCircle size={18} color="white" />
+                  <Text className="text-white font-semibold text-center ml-2">
+                    {!test.is_active ? 'Inactive' : 'Book Slot'}
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          )}
+        </View>
+      </Pressable>
+    );
+  };
+
+  return (
+    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <View className={`${isWeb ? 'px-8 pt-8' : 'px-4 pt-6'} pb-4`}>
+        <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          Tests
+        </Text>
+        <Text className={`mt-1 text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          Browse and take tests
+        </Text>
+      </View>
+
+      {/* Search Bar */}
+      <View className={isWeb ? 'px-8 mb-4' : 'px-4 mb-4'}>
+        <View
+          className={`flex-row items-center px-4 py-1 sm:py-3 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'
+            } border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
+        >
+          <Search size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
+          <TextInput
+            placeholder="Search tests..."
+            placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            className={`flex-1 ml-3 text-base ${isDark ? 'text-white' : 'text-gray-900'}`}
+          />
+        </View>
+      </View>
+
+      {/* Tabs */}
+      <View className={isWeb ? 'px-8 mb-4' : 'px-4 mb-4'}>
+        <View className="flex-row gap-2">
+          <TabButton
+            title="Available Tests"
+            isActive={activeTab === 'available'}
+            onPress={() => setActiveTab('available')}
+          />
+          <TabButton
+            title="Completed"
+            isActive={activeTab === 'completed'}
+            onPress={() => setActiveTab('completed')}
+          />
+        </View>
+      </View>
+
+      {/* Test List with Loading States */}
+      <LoadingState
+        loading={loading}
+        error={error}
+        empty={filteredTests.length === 0}
+        emptyMessage="No tests available"
+        emptyIcon="filter-outline"
+        onRetry={fetchTests}
+        skeleton="list"
+      >
+        <ScrollView
+          className={`flex-1 ${isWeb ? 'px-8' : 'px-4'}`}
+          contentContainerStyle={{
+            paddingBottom: isWeb && isLargeScreen ? 32 : 90, // Extra padding for bottom nav on mobile
+          }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refreshData} />
+          }
+        >
+          <View
+            className="flex-row flex-wrap"
+            style={{
+              gap: 12,
+              justifyContent: isWeb ? 'flex-start' : 'center'
+            }}
+          >
+            {filteredTests.map((test) => (
+              <TestCard key={test.id} test={test} />
+            ))}
+          </View>
+        </ScrollView>
+      </LoadingState>
+    </View>
+  );
+}
