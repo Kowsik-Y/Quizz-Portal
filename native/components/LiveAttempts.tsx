@@ -63,7 +63,6 @@ export default function LiveAttempts({
       setLastUpdated(new Date());
       setAccessDenied(false); // Reset access denied on success
     } catch (error: any) {
-      console.error('Error loading live attempts:', error);
       
       // Check if it's a 403 Forbidden error
       if (error.response?.status === 403) {
@@ -108,7 +107,6 @@ export default function LiveAttempts({
       mounted = false;
       if (interval) {
         clearInterval(interval);
-        console.log('🛑 Live attempts polling stopped');
       }
     };
   }, [testId, autoRefresh, refreshInterval]);

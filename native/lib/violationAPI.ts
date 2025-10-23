@@ -27,7 +27,6 @@ export const violationAPI = {
 
       return await response.json();
     } catch (error) {
-      console.error('Record violation error:', error);
       throw error;
     }
   },
@@ -57,7 +56,6 @@ export const violationAPI = {
 
       return await response.json();
     } catch (error) {
-      console.error('Bulk record violations error:', error);
       throw error;
     }
   },
@@ -80,7 +78,6 @@ export const violationAPI = {
 
       return await response.json();
     } catch (error) {
-      console.error('Get attempt violations error:', error);
       throw error;
     }
   },
@@ -103,7 +100,6 @@ export const violationAPI = {
 
       return await response.json();
     } catch (error) {
-      console.error('Get test violations error:', error);
       throw error;
     }
   },
@@ -126,7 +122,6 @@ export const violationAPI = {
 
       return await response.json();
     } catch (error) {
-      console.error('Get user violations error:', error);
       throw error;
     }
   },

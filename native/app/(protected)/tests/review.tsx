@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { attemptAPI } from '@/lib/api';
 import { TouchableOpacity } from 'react-native';
 import { CheckCircle, XCircle, Flag, Home } from 'lucide-react-native';
+import { useCustomAlert } from '@/components/ui/custom-alert';
 
 interface AttemptReview {
   attempt: {
@@ -39,6 +40,7 @@ interface AttemptReview {
 }
 
 export default function ReviewScreen() {
+  const { showAlert } = useCustomAlert();
   const params = useLocalSearchParams();
   const router = useRouter();
   const attemptId = parseInt(params.attemptId as string);
@@ -53,10 +55,9 @@ export default function ReviewScreen() {
   const fetchReview = async () => {
     try {
       const response = await attemptAPI.getReview(attemptId);
-      console.log('📊 Review data:', response.data);
       setReview(response.data);
     } catch (error) {
-      console.error('❌ Failed to fetch review:', error);
+      showAlert('Error', 'Failed to fetch review data');
     } finally {
       setLoading(false);
     }
@@ -167,13 +168,6 @@ export default function ReviewScreen() {
                       // Get the actual result for this test case
                       const testResult = answer.test_results && answer.test_results[testIdx];
                       const isPassed = testResult ? testResult.passed : false;
-                      
-                      console.log(`Test case ${testIdx}:`, {
-                        testResult,
-                        isPassed,
-                        test_results: answer.test_results,
-                        test_results_type: typeof answer.test_results
-                      });
                       
                       return (
                         <View key={testIdx} className="bg-gray-50 rounded-lg p-3 mb-2 border border-gray-200">

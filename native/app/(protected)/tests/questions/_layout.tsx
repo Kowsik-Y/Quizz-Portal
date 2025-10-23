@@ -1,6 +1,3 @@
-// Questions Sub-Module Layout
-// Handles question management pages within tests
-
 import HeaderTile from '@/components/ui/headerTile';
 import { Stack } from 'expo-router';
 
@@ -28,12 +25,6 @@ export default function QuestionsLayout() {
         name="view-questions" 
        options={{ 
           header: () => <HeaderTile title='View Questions' foot="Review existing questions for the test" />
-        }}
-      />
-      <Stack.Screen 
-        name="edit-question" 
-        options={{ 
-          header: () => <HeaderTile title='Edit Question' foot="Modify the selected question" />
         }}
       />
     </Stack>

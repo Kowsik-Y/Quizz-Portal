@@ -1,7 +1,3 @@
-// Protected Layout - Authentication required
-// Redirects to login if not authenticated
-// Contains all authenticated routes with persistent sidebar navigation
-
 import { useEffect } from 'react';
 import { useRouter, Stack, Redirect, useSegments, usePathname } from 'expo-router';
 import { View, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
@@ -17,32 +13,23 @@ export default function ProtectedLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  // Get auth state from Zustand store (root layout handles checkAuth)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const initializing = useAuthStore((state) => state.initializing);
 
   const isLoading = initializing;
 
-  // Platform and screen size detection
   const isWeb = Platform.OS === 'web';
-  const isLargeScreen = width >= 768; // Tablet/Desktop breakpoint
-
-  // Check if current route is take-test (full-screen page)
-  // Review page should show sidebar for navigation
+  const isLargeScreen = width >= 768;
   const currentRoute = String(pathname || '');
   const isFullScreenPage = currentRoute.indexOf('take-test') !== -1;
-
-  // Show sidebar only on desktop and NOT on full-screen pages
   const showSidebar = isWeb && isLargeScreen && !isFullScreenPage;
 
-  // Redirect to login if not authenticated (no checkAuth call needed here)
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace('/login');
     }
   }, [isAuthenticated, isLoading]);
 
-  // Show loading while checking auth
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-white dark:bg-gray-900">
@@ -51,16 +38,13 @@ export default function ProtectedLayout() {
     );
   }
 
-  // Redirect if not authenticated
   if (!isAuthenticated) {
     return <Redirect href="/login" />;
   }
 
-  // Desktop layout with sidebar
   if (showSidebar) {
     return (
       <View className="flex-1 flex-row">
-        {/* Persistent Sidebar - Always visible on desktop */}
         <AppSidebar />
 
         {/* Main Content Area */}

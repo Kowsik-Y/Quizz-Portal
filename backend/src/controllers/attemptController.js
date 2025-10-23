@@ -394,13 +394,32 @@ exports.getAttemptReview = async (req, res) => {
     // Calculate total points based on selected questions or all questions
     let totalPoints = 0;
     if (attemptData.selected_questions && attemptData.selected_questions.length > 0) {
-      // Use selected questions for total points calculation
-      const placeholders = attemptData.selected_questions.map((_, i) => `$${i + 2}`).join(',');
-      const totalPointsResult = await db.query(
-        `SELECT SUM(points) as total FROM questions WHERE id IN (${placeholders})`,
-        [attemptData.test_id, ...attemptData.selected_questions]
-      );
-      totalPoints = totalPointsResult.rows[0].total || 0;
+      // Ensure selected_questions is an array (it may be stored as JSON string)
+      let selectedQuestions = attemptData.selected_questions;
+      if (typeof selectedQuestions === 'string') {
+        try {
+          selectedQuestions = JSON.parse(selectedQuestions);
+        } catch (e) {
+          // If parsing fails, fall back to empty array so we use test_id fallback
+          selectedQuestions = [];
+        }
+      }
+
+      if (!Array.isArray(selectedQuestions) || selectedQuestions.length === 0) {
+        // Fallback to all questions if selectedQuestions is empty or invalid
+        const totalPointsResult = await db.query(
+          'SELECT SUM(points) as total FROM questions WHERE test_id = $1',
+          [attemptData.test_id]
+        );
+        totalPoints = totalPointsResult.rows[0].total || 0;
+      } else {
+        // Use Postgres ANY() with an int[] to avoid ambiguous parameter types
+        const totalPointsResult = await db.query(
+          'SELECT SUM(points) as total FROM questions WHERE id = ANY($1::int[])',
+          [selectedQuestions]
+        );
+        totalPoints = totalPointsResult.rows[0].total || 0;
+      }
     } else {
       // Fallback to all questions (for backward compatibility)
       const totalPointsResult = await db.query(

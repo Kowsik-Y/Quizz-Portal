@@ -1,10 +1,9 @@
-import { View, ScrollView, Pressable, TextInput, ActivityIndicator, Platform, Modal } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { ChevronLeft, Edit, Trash2, Save, X, Plus, Sparkles, Wand2 } from 'lucide-react-native';
+import { Edit, Trash2, Save, X, Plus, Sparkles, Wand2 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { questionAPI } from '@/lib/api';
@@ -42,7 +41,6 @@ export default function ViewQuestionsPage() {
       const res = await questionAPI.getByTest(Number(routeTestId));
       setQuestions(res.data.questions || []);
     } catch (error) {
-      console.error('Error fetching questions:', error);
       showAlert('Error', 'Failed to load questions');
     } finally {
       setLoading(false);
@@ -127,7 +125,7 @@ export default function ViewQuestionsPage() {
           parsedOptions.push('');
         }
       } catch (error) {
-        console.error('Error parsing options:', error);
+        showAlert('Error', 'Failed to parse question options');
         parsedOptions = ['', '', '', ''];
       }
     }
@@ -180,7 +178,6 @@ export default function ViewQuestionsPage() {
       setEditingId(null);
   fetchQuestions(); // Reload to get updated data
     } catch (error: any) {
-      console.error('Error updating question:', error);
       const errorMessage = error.response?.data?.error || 'Failed to update question';
       showAlert('Error', errorMessage);
     } finally {
@@ -227,7 +224,6 @@ export default function ViewQuestionsPage() {
       setGeneratedQuestions(allQuestions);
       showAlert('Success', `Generated ${allQuestions.length} questions successfully!`);
     } catch (error: any) {
-      console.error('Error generating questions:', error);
       const errorMessage = error.message || 'Failed to generate questions. Please try again or check your API key.';
       showAlert('Error', errorMessage);
     } finally {
@@ -283,7 +279,6 @@ export default function ViewQuestionsPage() {
       setAiPrompt('');
   fetchQuestions(); // Reload questions
     } catch (error: any) {
-      console.error('Error adding questions:', error);
       showAlert('Error', 'Failed to add some questions. Please try again.');
     } finally {
       setAddingQuestions(false);
@@ -307,7 +302,6 @@ export default function ViewQuestionsPage() {
               showAlert('Success', 'Question deleted successfully!');
               fetchQuestions(); // Reload questions
             } catch (error: any) {
-              console.error('Error deleting question:', error);
               const errorMessage = error.response?.data?.error || 'Failed to delete question';
               showAlert('Error', errorMessage);
             } finally {
@@ -801,7 +795,7 @@ export default function ViewQuestionsPage() {
                   );
                 });
               } catch (error) {
-                console.error('Error rendering options:', error);
+                showAlert('Error', 'Failed to render question options');
                 return null;
               }
             })()}
@@ -872,10 +866,71 @@ export default function ViewQuestionsPage() {
       </View>
     );
   };
-  console.log('Rendered ViewQuestionsPage',questions);
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
+      <View className={`p-4 border-b ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+        <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {testName} - Questions
+        </Text>
+      </View>
+
+      {/* Mobile Tab Navigation */}
+      {isMobile && (
+        <View className={`flex-row border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+          <Pressable
+            onPress={() => setActiveTab('config')}
+            className={`flex-1 py-3 px-4 items-center ${
+              activeTab === 'config'
+                ? isDark ? 'bg-blue-900/30 border-b-2 border-blue-500' : 'bg-blue-50 border-b-2 border-blue-500'
+                : ''
+            }`}
+          >
+            <Wand2 size={20} color={activeTab === 'config' ? '#3b82f6' : (isDark ? '#9ca3af' : '#6b7280')} />
+            <Text className={`text-xs mt-1 font-medium ${
+              activeTab === 'config'
+                ? isDark ? 'text-blue-400' : 'text-blue-600'
+                : isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              AI Config
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setActiveTab('generated')}
+            className={`flex-1 py-3 px-4 items-center ${
+              activeTab === 'generated'
+                ? isDark ? 'bg-purple-900/30 border-b-2 border-purple-500' : 'bg-purple-50 border-b-2 border-purple-500'
+                : ''
+            }`}
+          >
+            <Sparkles size={20} color={activeTab === 'generated' ? '#8b5cf6' : (isDark ? '#9ca3af' : '#6b7280')} />
+            <Text className={`text-xs mt-1 font-medium ${
+              activeTab === 'generated'
+                ? isDark ? 'text-purple-400' : 'text-purple-600'
+                : isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Generated
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setActiveTab('existing')}
+            className={`flex-1 py-3 px-4 items-center ${
+              activeTab === 'existing'
+                ? isDark ? 'bg-green-900/30 border-b-2 border-green-500' : 'bg-green-50 border-b-2 border-green-500'
+                : ''
+            }`}
+          >
+            <Edit size={20} color={activeTab === 'existing' ? '#10b981' : (isDark ? '#9ca3af' : '#6b7280')} />
+            <Text className={`text-xs mt-1 font-medium ${
+              activeTab === 'existing'
+                ? isDark ? 'text-green-400' : 'text-green-600'
+                : isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Questions
+            </Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* 3-Column Layout */}
       {loading ? (
@@ -888,16 +943,17 @@ export default function ViewQuestionsPage() {
       ) : (
         <View className="flex-1 flex-row">
           {/* LEFT COLUMN - AI Configuration */}
-          <View className={`basis-1/3 border-r ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-50 border-gray-200'}`}>
-            <ScrollView className="flex-1 p-4">
-              <View className="mb-4">
-                <Text className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                   AI Generator
-                </Text>
-                <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Configure and generate questions
-                </Text>
-              </View>
+          {(activeTab === 'config' || !isMobile) && (
+            <View className={`${isMobile ? 'flex-1' : 'basis-1/3'} ${!isMobile ? `border-r ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-50 border-gray-200'}` : ''}`}>
+              <ScrollView className="flex-1 p-4">
+                <View className="mb-4">
+                  <Text className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                     AI Generator
+                  </Text>
+                  <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Configure and generate questions
+                  </Text>
+                </View>
 
               {/* Title Input */}
               <View className="mb-4">
@@ -1091,7 +1147,7 @@ export default function ViewQuestionsPage() {
               <Pressable
                 onPress={handleGenerateQuestions}
                 disabled={generating || !aiPrompt.trim()}
-                className={`py-4 rounded-lg flex-row items-center justify-center gap-2 ${
+                className={`py-4 mb-10 rounded-lg flex-row items-center justify-center gap-2 ${
                   generating || !aiPrompt.trim()
                     ? 'bg-gray-400'
                     : 'bg-purple-600'
@@ -1111,118 +1167,137 @@ export default function ViewQuestionsPage() {
               </Pressable>
             </ScrollView>
           </View>
-
+)}
           {/* CENTER COLUMN - Generated Questions */}
-          <View className="basis-1/3">
-            <View className={`p-4 border-b ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-              <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                📝 Generated Questions
-              </Text>
-              <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Review and select questions to add
-              </Text>
-            </View>
-            
-            <ScrollView className="flex-1 p-4">
-              {generatedQuestions.length === 0 ? (
-                <View className="flex-1 items-center justify-center py-20">
-                  <Sparkles size={64} color={isDark ? '#6b7280' : '#9ca3af'} />
-                  <Text className={`mt-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Configure settings and click Generate
-                  </Text>
-                </View>
-              ) : (
-                <>
-                  {generatedQuestions.map((q, idx) => {
-                    const isEditingGenerated = editingGeneratedId === idx;
-                    
-                    if (isEditingGenerated) {
-                      return (
-                        <View
-                          key={idx}
-                          className={`mb-4 p-4 rounded-lg border-2 border-blue-500 ${
-                            isDark ? 'bg-gray-800' : 'bg-white'
-                          }`}
-                        >
-                          {/* Header */}
-                          <View className="flex-row items-center justify-between mb-4">
-                            <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                              Edit Generated Question {idx + 1}
-                            </Text>
-                            <View className={`px-3 py-1 rounded-full ${
-                              q.question_type === 'mcq' 
-                                ? isDark ? 'bg-blue-900/30' : 'bg-blue-100'
-                                : q.question_type === 'code'
-                                ? isDark ? 'bg-green-900/30' : 'bg-green-100'
-                                : isDark ? 'bg-purple-900/30' : 'bg-purple-100'
-                            }`}>
-                              <Text className={`text-xs font-semibold ${
+          {(activeTab === 'generated' || !isMobile) && (
+            <View className={`${isMobile ? 'flex-1' : 'basis-1/3'}`}>
+              <View className={`p-4`}>
+                <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Generated Questions
+                </Text>
+                <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Review and select questions to add
+                </Text>
+              </View>
+              
+              <ScrollView className="flex-1 p-4">
+                {generatedQuestions.length === 0 ? (
+                  <View className="flex-1 items-center justify-center py-20">
+                    <Sparkles size={64} color={isDark ? '#6b7280' : '#9ca3af'} />
+                    <Text className={`mt-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Configure settings and click Generate
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    {generatedQuestions.map((q, idx) => {
+                      const isEditingGenerated = editingGeneratedId === idx;
+                      
+                      if (isEditingGenerated) {
+                        return (
+                          <View
+                            key={idx}
+                            className={`mb-4 p-4 rounded-lg border-2 border-blue-500 ${
+                              isDark ? 'bg-gray-800' : 'bg-white'
+                            }`}
+                          >
+                            {/* Header */}
+                            <View className="flex-row items-center justify-between mb-4">
+                              <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                Edit Generated Question {idx + 1}
+                              </Text>
+                              <View className={`px-3 py-1 rounded-full ${
                                 q.question_type === 'mcq' 
-                                  ? isDark ? 'text-blue-300' : 'text-blue-700'
+                                  ? isDark ? 'bg-blue-900/30' : 'bg-blue-100'
                                   : q.question_type === 'code'
-                                  ? isDark ? 'text-green-300' : 'text-green-700'
-                                  : isDark ? 'text-purple-300' : 'text-purple-700'
+                                  ? isDark ? 'bg-green-900/30' : 'bg-green-100'
+                                  : isDark ? 'bg-purple-900/30' : 'bg-purple-100'
                               }`}>
-                                {q.question_type.toUpperCase()}
-                              </Text>
+                                <Text className={`text-xs font-semibold ${
+                                  q.question_type === 'mcq' 
+                                    ? isDark ? 'text-blue-300' : 'text-blue-700'
+                                    : q.question_type === 'code'
+                                    ? isDark ? 'text-green-300' : 'text-green-700'
+                                    : isDark ? 'text-purple-300' : 'text-purple-700'
+                                }`}>
+                                  {q.question_type.toUpperCase()}
+                                </Text>
+                              </View>
                             </View>
-                          </View>
 
-                          {/* Question Text */}
-                          <View className="mb-4">
-                            <Text className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                              Question Text
-                            </Text>
-                            <TextInput
-                              value={editGeneratedForm.question_text}
-                              onChangeText={(text) => setEditGeneratedForm({ ...editGeneratedForm, question_text: text })}
-                              placeholder="Enter question text"
-                              placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                              className={`px-4 py-3 rounded-lg border ${
-                                isDark 
-                                  ? 'bg-gray-900 border-gray-700 text-white' 
-                                  : 'bg-gray-50 border-gray-300 text-gray-900'
-                              }`}
-                              multiline
-                              numberOfLines={3}
-                            />
-                          </View>
-
-                          {/* Points */}
-                          <View className="mb-4">
-                            <Text className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                              Points
-                            </Text>
-                            <TextInput
-                              value={editGeneratedForm.points}
-                              onChangeText={(text) => setEditGeneratedForm({ ...editGeneratedForm, points: text })}
-                              placeholder="Enter points"
-                              placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                              keyboardType="numeric"
-                              className={`px-4 py-3 rounded-lg border ${
-                                isDark 
-                                  ? 'bg-gray-900 border-gray-700 text-white' 
-                                  : 'bg-gray-50 border-gray-300 text-gray-900'
-                              }`}
-                            />
-                          </View>
-
-                          {/* MCQ Options */}
-                          {q.question_type === 'mcq' && (
-                            <>
+                            {/* Question Text */}
+                            <View className="mb-4">
                               <Text className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Options
+                                Question Text
                               </Text>
-                              {editGeneratedForm.options.map((option, optIdx) => (
-                                <View key={optIdx} className="mb-3">
+                              <TextInput
+                                value={editGeneratedForm.question_text}
+                                onChangeText={(text) => setEditGeneratedForm({ ...editGeneratedForm, question_text: text })}
+                                placeholder="Enter question text"
+                                placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+                                className={`px-4 py-3 rounded-lg border ${
+                                  isDark 
+                                    ? 'bg-gray-900 border-gray-700 text-white' 
+                                    : 'bg-gray-50 border-gray-300 text-gray-900'
+                                }`}
+                                multiline
+                                numberOfLines={3}
+                              />
+                            </View>
+
+                            {/* Points */}
+                            <View className="mb-4">
+                              <Text className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                Points
+                              </Text>
+                              <TextInput
+                                value={editGeneratedForm.points}
+                                onChangeText={(text) => setEditGeneratedForm({ ...editGeneratedForm, points: text })}
+                                placeholder="Enter points"
+                                placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+                                keyboardType="numeric"
+                                className={`px-4 py-3 rounded-lg border ${
+                                  isDark 
+                                    ? 'bg-gray-900 border-gray-700 text-white' 
+                                    : 'bg-gray-50 border-gray-300 text-gray-900'
+                                }`}
+                              />
+                            </View>
+
+                            {/* MCQ Options */}
+                            {q.question_type === 'mcq' && (
+                              <>
+                                <Text className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  Options
+                                </Text>
+                                {editGeneratedForm.options.map((option, optIdx) => (
+                                  <View key={optIdx} className="mb-3">
+                                    <TextInput
+                                      value={option}
+                                      onChangeText={(text) => {
+                                        const newOptions = [...editGeneratedForm.options];
+                                        newOptions[optIdx] = text;
+                                        setEditGeneratedForm({ ...editGeneratedForm, options: newOptions });
+                                      }}
+                                      placeholder={`Option ${optIdx + 1}`}
+                                      placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+                                      className={`px-4 py-3 rounded-lg border ${
+                                        isDark 
+                                          ? 'bg-gray-900 border-gray-700 text-white' 
+                                          : 'bg-gray-50 border-gray-300 text-gray-900'
+                                      }`}
+                                    />
+                                  </View>
+                                ))}
+
+                                <View className="mb-4">
+                                  <Text className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Correct Answer
+                                  </Text>
                                   <TextInput
-                                    value={option}
-                                    onChangeText={(text) => {
-                                      const newOptions = [...editGeneratedForm.options];
-                                      newOptions[optIdx] = text;
-                                      setEditGeneratedForm({ ...editGeneratedForm, options: newOptions });
-                                    }}
-                                    placeholder={`Option ${optIdx + 1}`}
+                                    value={editGeneratedForm.correct_answer}
+                                    onChangeText={(text) => setEditGeneratedForm({ ...editGeneratedForm, correct_answer: text })}
+                                    placeholder="Enter correct answer"
                                     placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
                                     className={`px-4 py-3 rounded-lg border ${
                                       isDark 
@@ -1231,680 +1306,666 @@ export default function ViewQuestionsPage() {
                                     }`}
                                   />
                                 </View>
-                              ))}
+                              </>
+                            )}
 
+                            {/* Theory Answer */}
+                            {q.question_type === 'theory' && (
                               <View className="mb-4">
                                 <Text className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                  Correct Answer
+                                  Model Answer
                                 </Text>
                                 <TextInput
                                   value={editGeneratedForm.correct_answer}
                                   onChangeText={(text) => setEditGeneratedForm({ ...editGeneratedForm, correct_answer: text })}
-                                  placeholder="Enter correct answer"
+                                  placeholder="Enter model answer"
                                   placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
                                   className={`px-4 py-3 rounded-lg border ${
                                     isDark 
                                       ? 'bg-gray-900 border-gray-700 text-white' 
                                       : 'bg-gray-50 border-gray-300 text-gray-900'
                                   }`}
+                                  multiline
+                                  numberOfLines={4}
                                 />
                               </View>
-                            </>
-                          )}
+                            )}
 
-                          {/* Theory Answer */}
-                          {q.question_type === 'theory' && (
-                            <View className="mb-4">
-                              <Text className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Model Answer
-                              </Text>
-                              <TextInput
-                                value={editGeneratedForm.correct_answer}
-                                onChangeText={(text) => setEditGeneratedForm({ ...editGeneratedForm, correct_answer: text })}
-                                placeholder="Enter model answer"
-                                placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                                className={`px-4 py-3 rounded-lg border ${
-                                  isDark 
-                                    ? 'bg-gray-900 border-gray-700 text-white' 
-                                    : 'bg-gray-50 border-gray-300 text-gray-900'
-                                }`}
-                                multiline
-                                numberOfLines={4}
-                              />
-                            </View>
-                          )}
-
-                          {/* Coding Test Cases */}
-                          {q.question_type === 'code' && (
-                            <View className="mb-4">
-                              <View className="flex-row items-center justify-between mb-2">
-                                <Text className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                  Test Cases
-                                </Text>
-                                <Pressable
-                                  onPress={() => setEditGeneratedForm({
-                                    ...editGeneratedForm,
-                                    test_cases: [...editGeneratedForm.test_cases, { input: '', expected_output: '', points: 1 }]
-                                  })}
-                                  className={`px-3 py-1 rounded-lg ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`}
-                                >
-                                  <Text className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
-                                    + Add Test Case
+                            {/* Coding Test Cases */}
+                            {q.question_type === 'code' && (
+                              <View className="mb-4">
+                                <View className="flex-row items-center justify-between mb-2">
+                                  <Text className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Test Cases
                                   </Text>
-                                </Pressable>
-                              </View>
-
-                              {editGeneratedForm.test_cases.map((testCase, idx) => (
-                                <View key={idx} className={`mb-3 p-3 rounded-lg border ${
-                                  isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-300'
-                                }`}>
-                                  <View className="flex-row items-center justify-between mb-2">
-                                    <Text className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                      Test Case {idx + 1}
+                                  <Pressable
+                                    onPress={() => setEditGeneratedForm({
+                                      ...editGeneratedForm,
+                                      test_cases: [...editGeneratedForm.test_cases, { input: '', expected_output: '', points: 1 }]
+                                    })}
+                                    className={`px-3 py-1 rounded-lg ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`}
+                                  >
+                                    <Text className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                                      + Add Test Case
                                     </Text>
-                                    <Pressable
-                                      onPress={() => {
-                                        const newTestCases = editGeneratedForm.test_cases.filter((_, i) => i !== idx);
-                                        setEditGeneratedForm({ ...editGeneratedForm, test_cases: newTestCases });
-                                      }}
-                                      className={`p-1 rounded ${isDark ? 'bg-red-900/30' : 'bg-red-100'}`}
-                                    >
-                                      <X size={16} color="#ef4444" />
-                                    </Pressable>
-                                  </View>
-
-                                  <View className="mb-2">
-                                    <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                      Input
-                                    </Text>
-                                    <TextInput
-                                      value={testCase.input}
-                                      onChangeText={(text) => {
-                                        const newTestCases = [...editGeneratedForm.test_cases];
-                                        newTestCases[idx].input = text;
-                                        setEditGeneratedForm({ ...editGeneratedForm, test_cases: newTestCases });
-                                      }}
-                                      placeholder="Enter test input"
-                                      placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                                      className={`px-3 py-2 rounded border ${
-                                        isDark
-                                          ? 'bg-gray-800 border-gray-600 text-white'
-                                          : 'bg-white border-gray-300 text-gray-900'
-                                      }`}
-                                    />
-                                  </View>
-
-                                  <View className="mb-2">
-                                    <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                      Expected Output
-                                    </Text>
-                                    <TextInput
-                                      value={testCase.expected_output}
-                                      onChangeText={(text) => {
-                                        const newTestCases = [...editGeneratedForm.test_cases];
-                                        newTestCases[idx].expected_output = text;
-                                        setEditGeneratedForm({ ...editGeneratedForm, test_cases: newTestCases });
-                                      }}
-                                      placeholder="Enter expected output"
-                                      placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                                      className={`px-3 py-2 rounded border ${
-                                        isDark
-                                          ? 'bg-gray-800 border-gray-600 text-white'
-                                          : 'bg-white border-gray-300 text-gray-900'
-                                      }`}
-                                    />
-                                  </View>
-
-                                  <View>
-                                    <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                      Points
-                                    </Text>
-                                    <TextInput
-                                      value={testCase.points.toString()}
-                                      onChangeText={(text) => {
-                                        const newTestCases = [...editGeneratedForm.test_cases];
-                                        newTestCases[idx].points = Number(text) || 1;
-                                        setEditGeneratedForm({ ...editGeneratedForm, test_cases: newTestCases });
-                                      }}
-                                      placeholder="1"
-                                      placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                                      keyboardType="numeric"
-                                      className={`px-3 py-2 rounded border ${
-                                        isDark
-                                          ? 'bg-gray-800 border-gray-600 text-white'
-                                          : 'bg-white border-gray-300 text-gray-900'
-                                      }`}
-                                    />
-                                  </View>
+                                  </Pressable>
                                 </View>
-                              ))}
 
-                              {editGeneratedForm.test_cases.length === 0 && (
-                                <Text className={`text-sm text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                  No test cases added yet. Click "Add Test Case" to add one.
-                                </Text>
-                              )}
-                            </View>
-                          )}
+                                {editGeneratedForm.test_cases.map((testCase, idx) => (
+                                  <View key={idx} className={`mb-3 p-3 rounded-lg border ${
+                                    isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-300'
+                                  }`}>
+                                    <View className="flex-row items-center justify-between mb-2">
+                                      <Text className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        Test Case {idx + 1}
+                                      </Text>
+                                      <Pressable
+                                        onPress={() => {
+                                          const newTestCases = editGeneratedForm.test_cases.filter((_, i) => i !== idx);
+                                          setEditGeneratedForm({ ...editGeneratedForm, test_cases: newTestCases });
+                                        }}
+                                        className={`p-1 rounded ${isDark ? 'bg-red-900/30' : 'bg-red-100'}`}
+                                      >
+                                        <X size={16} color="#ef4444" />
+                                      </Pressable>
+                                    </View>
 
-                          {/* Action Buttons */}
-                          <View className="flex-row gap-3">
-                            <Pressable
-                              onPress={handleCancelEditGenerated}
-                              className={`flex-1 py-3 rounded-lg border flex-row items-center justify-center gap-2 ${
-                                isDark 
-                                  ? 'border-gray-700 bg-gray-900' 
-                                  : 'border-gray-300 bg-gray-50'
-                              }`}
-                            >
-                              <X size={18} color={isDark ? '#9ca3af' : '#6b7280'} />
-                              <Text className={`font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Cancel
-                              </Text>
-                            </Pressable>
+                                    <View className="mb-2">
+                                      <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Input
+                                      </Text>
+                                      <TextInput
+                                        value={testCase.input}
+                                        onChangeText={(text) => {
+                                          const newTestCases = [...editGeneratedForm.test_cases];
+                                          newTestCases[idx].input = text;
+                                          setEditGeneratedForm({ ...editGeneratedForm, test_cases: newTestCases });
+                                        }}
+                                        placeholder="Enter test input"
+                                        placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+                                        className={`px-3 py-2 rounded border ${
+                                          isDark
+                                            ? 'bg-gray-800 border-gray-600 text-white'
+                                            : 'bg-white border-gray-300 text-gray-900'
+                                        }`}
+                                      />
+                                    </View>
 
-                            <Pressable
-                              onPress={() => handleSaveGenerated(idx)}
-                              disabled={!editGeneratedForm.question_text.trim() || !editGeneratedForm.points}
-                              className={`flex-1 py-3 rounded-lg flex-row items-center justify-center gap-2 ${
-                                !editGeneratedForm.question_text.trim() || !editGeneratedForm.points
-                                  ? 'bg-gray-400' 
-                                  : 'bg-blue-500'
-                              }`}
-                            >
-                              <Save size={18} color="white" />
-                              <Text className="text-white font-semibold">
-                                Save
-                              </Text>
-                            </Pressable>
-                          </View>
-                        </View>
-                      );
-                    }
+                                    <View className="mb-2">
+                                      <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Expected Output
+                                      </Text>
+                                      <TextInput
+                                        value={testCase.expected_output}
+                                        onChangeText={(text) => {
+                                          const newTestCases = [...editGeneratedForm.test_cases];
+                                          newTestCases[idx].expected_output = text;
+                                          setEditGeneratedForm({ ...editGeneratedForm, test_cases: newTestCases });
+                                        }}
+                                        placeholder="Enter expected output"
+                                        placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+                                        className={`px-3 py-2 rounded border ${
+                                          isDark
+                                            ? 'bg-gray-800 border-gray-600 text-white'
+                                            : 'bg-white border-gray-300 text-gray-900'
+                                        }`}
+                                      />
+                                    </View>
 
-                    return (
-                      <Pressable
-                        key={idx}
-                        onPress={() => handleToggleSelection(idx)}
-                        className={`mb-4 p-4 rounded-lg border-2 ${
-                          q.selected
-                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                            : isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-                        }`}
-                      >
-                        <View className="flex-row items-start justify-between mb-2">
-                          <View className="flex-row items-center gap-2 flex-1">
-                            <View className={`w-6 h-6 rounded border-2 items-center justify-center ${
-                              q.selected
-                                ? 'bg-purple-600 border-purple-600'
-                                : isDark ? 'border-gray-600' : 'border-gray-300'
-                            }`}>
-                              {q.selected && <Text className="text-white text-xs">✓</Text>}
-                            </View>
-                            <Text className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                              Q{idx + 1}
-                            </Text>
-                            {q.difficulty && (
-                              <View className={`px-2 py-0.5 rounded ${
-                                q.difficulty === 'easy' ? 'bg-green-100 dark:bg-green-900/30' :
-                                q.difficulty === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
-                                'bg-red-100 dark:bg-red-900/30'
-                              }`}>
-                                <Text className={`text-xs font-medium ${
-                                  q.difficulty === 'easy' ? 'text-green-700 dark:text-green-400' :
-                                  q.difficulty === 'medium' ? 'text-yellow-700 dark:text-yellow-400' :
-                                  'text-red-700 dark:text-red-400'
-                                }`}>
-                                  {q.difficulty.toUpperCase()}
-                                </Text>
+                                    <View>
+                                      <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Points
+                                      </Text>
+                                      <TextInput
+                                        value={testCase.points.toString()}
+                                        onChangeText={(text) => {
+                                          const newTestCases = [...editGeneratedForm.test_cases];
+                                          newTestCases[idx].points = Number(text) || 1;
+                                          setEditGeneratedForm({ ...editGeneratedForm, test_cases: newTestCases });
+                                        }}
+                                        placeholder="1"
+                                        placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+                                        keyboardType="numeric"
+                                        className={`px-3 py-2 rounded border ${
+                                          isDark
+                                            ? 'bg-gray-800 border-gray-600 text-white'
+                                            : 'bg-white border-gray-300 text-gray-900'
+                                        }`}
+                                      />
+                                    </View>
+                                  </View>
+                                ))}
+
+                                {editGeneratedForm.test_cases.length === 0 && (
+                                  <Text className={`text-sm text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    No test cases added yet. Click "Add Test Case" to add one.
+                                  </Text>
+                                )}
                               </View>
                             )}
-                            <View className={`px-2 py-0.5 rounded ${
-                              q.question_type === 'mcq' ? 'bg-blue-100 dark:bg-blue-900/30' :
-                              q.question_type === 'theory' ? 'bg-purple-100 dark:bg-purple-900/30' :
-                              'bg-orange-100 dark:bg-orange-900/30'
-                            }`}>
-                              <Text className={`text-xs font-medium ${
-                                q.question_type === 'mcq' ? 'text-blue-700 dark:text-blue-400' :
-                                q.question_type === 'theory' ? 'text-purple-700 dark:text-purple-400' :
-                                'text-orange-700 dark:text-orange-400'
+
+                            {/* Action Buttons */}
+                            <View className="flex-row gap-3">
+                              <Pressable
+                                onPress={handleCancelEditGenerated}
+                                className={`flex-1 py-3 rounded-lg border flex-row items-center justify-center gap-2 ${
+                                  isDark 
+                                    ? 'border-gray-700 bg-gray-900' 
+                                    : 'border-gray-300 bg-gray-50'
+                                }`}
+                              >
+                                <X size={18} color={isDark ? '#9ca3af' : '#6b7280'} />
+                                <Text className={`font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  Cancel
+                                </Text>
+                              </Pressable>
+
+                              <Pressable
+                                onPress={() => handleSaveGenerated(idx)}
+                                disabled={!editGeneratedForm.question_text.trim() || !editGeneratedForm.points}
+                                className={`flex-1 py-3 rounded-lg flex-row items-center justify-center gap-2 ${
+                                  !editGeneratedForm.question_text.trim() || !editGeneratedForm.points
+                                    ? 'bg-gray-400' 
+                                    : 'bg-blue-500'
+                                }`}
+                              >
+                                <Save size={18} color="white" />
+                                <Text className="text-white font-semibold">
+                                  Save
+                                </Text>
+                              </Pressable>
+                            </View>
+                          </View>
+                        );
+                      }
+
+                      return (
+                        <Pressable
+                          key={idx}
+                          onPress={() => handleToggleSelection(idx)}
+                          className={`mb-4 p-4 rounded-lg border-2 ${
+                            q.selected
+                              ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                              : isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+                          }`}
+                        >
+                          <View className="flex-row items-start justify-between mb-2">
+                            <View className="flex-row items-center gap-2 flex-1">
+                              <View className={`w-6 h-6 rounded border-2 items-center justify-center ${
+                                q.selected
+                                  ? 'bg-purple-600 border-purple-600'
+                                  : isDark ? 'border-gray-600' : 'border-gray-300'
                               }`}>
-                                {q.question_type.toUpperCase()}
+                                {q.selected && <Text className="text-white text-xs">✓</Text>}
+                              </View>
+                              <Text className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                Q{idx + 1}
+                              </Text>
+                              {q.difficulty && (
+                                <View className={`px-2 py-0.5 rounded ${
+                                  q.difficulty === 'easy' ? 'bg-green-100 dark:bg-green-900/30' :
+                                  q.difficulty === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
+                                  'bg-red-100 dark:bg-red-900/30'
+                                }`}>
+                                  <Text className={`text-xs font-medium ${
+                                    q.difficulty === 'easy' ? 'text-green-700 dark:text-green-400' :
+                                    q.difficulty === 'medium' ? 'text-yellow-700 dark:text-yellow-400' :
+                                    'text-red-700 dark:text-red-400'
+                                  }`}>
+                                    {q.difficulty.toUpperCase()}
+                                  </Text>
+                                </View>
+                              )}
+                              <View className={`px-2 py-0.5 rounded ${
+                                q.question_type === 'mcq' ? 'bg-blue-100 dark:bg-blue-900/30' :
+                                q.question_type === 'theory' ? 'bg-purple-100 dark:bg-purple-900/30' :
+                                'bg-orange-100 dark:bg-orange-900/30'
+                              }`}>
+                                <Text className={`text-xs font-medium ${
+                                  q.question_type === 'mcq' ? 'text-blue-700 dark:text-blue-400' :
+                                  q.question_type === 'theory' ? 'text-purple-700 dark:text-purple-400' :
+                                  'text-orange-700 dark:text-orange-400'
+                                }`}>
+                                  {q.question_type.toUpperCase()}
+                                </Text>
+                              </View>
+                            </View>
+                            <Pressable
+                              onPress={() => handleEditGenerated(idx)}
+                              className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
+                            >
+                              <Edit size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
+                            </Pressable>
+                          </View>
+
+                          <Text className={`mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                            {q.question_text}
+                          </Text>
+
+                          {q.question_type === 'mcq' && q.options && (
+                            <View className="gap-2">
+                              {q.options.map((opt, optIdx) => (
+                                <View
+                                  key={optIdx}
+                                  className={`p-2 rounded ${
+                                    opt === q.correct_answer
+                                      ? 'bg-green-100 dark:bg-green-900/30 border border-green-500'
+                                      : isDark ? 'bg-gray-700' : 'bg-gray-50'
+                                  }`}
+                                >
+                                  <Text className={`text-sm ${
+                                    opt === q.correct_answer
+                                      ? 'text-green-700 dark:text-green-300 font-medium'
+                                      : isDark ? 'text-gray-300' : 'text-gray-700'
+                                  }`}>
+                                    {String.fromCharCode(65 + optIdx)}. {opt}
+                                    {opt === q.correct_answer && ' ✓'}
+                                  </Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+
+                          {(q.question_type === 'theory' || q.question_type === 'code') && q.correct_answer && (
+                            <View className={`p-2 rounded mt-2 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                              <Text className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                Answer:
+                              </Text>
+                              <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                {q.correct_answer}
+                              </Text>
+                            </View>
+                          )}
+
+                          <Text className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                            Points: {q.points}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+
+                    {/* Action Buttons */}
+                    <View className="flex-row gap-3 mt-4 mb-14">
+                      <Pressable
+                        onPress={handleClearGenerated}
+                        className={`flex-1 py-3 rounded-lg border ${
+                          isDark ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
+                        }`}
+                      >
+                        <Text className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Clear All
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={handleAddSelectedQuestions}
+                        disabled={addingQuestions || generatedQuestions.filter(q => q.selected).length === 0}
+                        className={`flex-1 py-3 rounded-lg ${
+                          addingQuestions || generatedQuestions.filter(q => q.selected).length === 0
+                            ? 'bg-gray-400'
+                            : 'bg-purple-600'
+                        }`}
+                      >
+                        <Text className="text-white text-center font-semibold">
+                          {addingQuestions
+                            ? 'Adding...'
+                            : `Add ${generatedQuestions.filter(q => q.selected).length} Selected`
+                          }
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </>
+                )}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* RIGHT COLUMN - Existing Questions */}
+          {(activeTab === 'existing' || !isMobile) && (
+            <View className={`${isMobile ? 'flex-1' : 'basis-1/3'} ${!isMobile ? `border-l ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-50 border-gray-200'}` : ''}`}>
+              <View className={`p-4 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Test Questions ({questions.length})
+                </Text>
+              </View>
+              
+              <ScrollView className="flex-1 p-4">
+                {questions.length === 0 ? (
+                  <View className="items-center justify-center py-12">
+                    <Text className={`text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                      No questions yet
+                    </Text>
+                  </View>
+                ) : (
+                  questions.map((q, idx) => {
+                    return (
+                      <View
+                        key={idx}
+                        className={`mb-3 p-3 rounded-lg border ${
+                          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                        }`}
+                      >
+                        <View className="flex-row items-center justify-between mb-2">
+                          <View className="flex-row items-center gap-2 flex-1">
+                            <View className={`px-2 py-1 rounded ${
+                              isDark ? 'bg-blue-900/30' : 'bg-blue-100'
+                            }`}>
+                              <Text className={`text-xs font-bold ${
+                                isDark ? 'text-blue-400' : 'text-blue-600'
+                              }`}>
+                                #{idx + 1}
+                              </Text>
+                            </View>
+                            <View className="flex-row gap-2">
+                              <View className={`px-2 py-1 rounded ${
+                                q.question_type === 'mcq' ? 'bg-purple-100 dark:bg-purple-900/30' :
+                                q.question_type === 'code' ? 'bg-orange-100 dark:bg-orange-900/30' :
+                                'bg-green-100 dark:bg-green-900/30'
+                              }`}>
+                                <Text className={`text-xs font-medium ${
+                                  q.question_type === 'mcq' ? 'text-purple-600 dark:text-purple-400' :
+                                  q.question_type === 'code' ? 'text-orange-600 dark:text-orange-400' :
+                                  'text-green-600 dark:text-green-400'
+                                }`}>
+                                  {q.question_type.toUpperCase()}
+                                </Text>
+                              </View>
+                              <Text className={`text-xs font-bold ${
+                                isDark ? 'text-gray-400' : 'text-gray-600'
+                              }`}>
+                                {q.points}pts
                               </Text>
                             </View>
                           </View>
                           <Pressable
-                            onPress={() => handleEditGenerated(idx)}
+                            onPress={() => {
+                              setEditingId(q.id);
+                              let parsedOptions: string[] = ['', '', '', ''];
+                              if (q.question_type === 'mcq' && q.options) {
+                                try {
+                                  const opts = typeof q.options === 'string' ? JSON.parse(q.options) : Array.isArray(q.options) ? q.options : [];
+                                  parsedOptions = opts.map((opt: any) => typeof opt === 'string' ? opt : (opt.text || ''));
+                                  while (parsedOptions.length < 4) parsedOptions.push('');
+                                } catch { parsedOptions = ['', '', '', '']; }
+                              }
+                              setEditForm({
+                                question_text: q.question_text,
+                                points: q.points.toString(),
+                                correct_answer: q.correct_answer || '',
+                                options: parsedOptions,
+                                test_cases: q.test_cases || [],
+                                expandedId: q.id
+                              });
+                            }}
                             className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
                           >
                             <Edit size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
                           </Pressable>
                         </View>
-
-                        <Text className={`mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                          {q.question_text}
-                        </Text>
-
-                        {q.question_type === 'mcq' && q.options && (
-                          <View className="gap-2">
-                            {q.options.map((opt, optIdx) => (
-                              <View
-                                key={optIdx}
-                                className={`p-2 rounded ${
-                                  opt === q.correct_answer
-                                    ? 'bg-green-100 dark:bg-green-900/30 border border-green-500'
-                                    : isDark ? 'bg-gray-700' : 'bg-gray-50'
-                                }`}
-                              >
-                                <Text className={`text-sm ${
-                                  opt === q.correct_answer
-                                    ? 'text-green-700 dark:text-green-300 font-medium'
-                                    : isDark ? 'text-gray-300' : 'text-gray-700'
-                                }`}>
-                                  {String.fromCharCode(65 + optIdx)}. {opt}
-                                  {opt === q.correct_answer && ' ✓'}
-                                </Text>
-                              </View>
-                            ))}
-                          </View>
-                        )}
-
-                        {(q.question_type === 'theory' || q.question_type === 'code') && q.correct_answer && (
-                          <View className={`p-2 rounded mt-2 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                            <Text className={`text-sm font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                              Answer:
-                            </Text>
-                            <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                              {q.correct_answer}
-                            </Text>
-                          </View>
-                        )}
-
-                        <Text className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                          Points: {q.points}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-
-                  {/* Action Buttons */}
-                  <View className="flex-row gap-3 mt-4">
-                    <Pressable
-                      onPress={handleClearGenerated}
-                      className={`flex-1 py-3 rounded-lg border ${
-                        isDark ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
-                      }`}
-                    >
-                      <Text className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Clear All
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={handleAddSelectedQuestions}
-                      disabled={addingQuestions || generatedQuestions.filter(q => q.selected).length === 0}
-                      className={`flex-1 py-3 rounded-lg ${
-                        addingQuestions || generatedQuestions.filter(q => q.selected).length === 0
-                          ? 'bg-gray-400'
-                          : 'bg-purple-600'
-                      }`}
-                    >
-                      <Text className="text-white text-center font-semibold">
-                        {addingQuestions
-                          ? 'Adding...'
-                          : `Add ${generatedQuestions.filter(q => q.selected).length} Selected`
-                        }
-                      </Text>
-                    </Pressable>
-                  </View>
-                </>
-              )}
-            </ScrollView>
-          </View>
-
-          {/* RIGHT COLUMN - Existing Questions */}
-          <View className={`basis-1/3 border-l ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-50 border-gray-200'}`}>
-            <View className={`p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-              <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                📚 Test Questions ({questions.length})
-              </Text>
-            </View>
-            
-            <ScrollView className="flex-1 p-4">
-              {questions.length === 0 ? (
-                <View className="items-center justify-center py-12">
-                  <Text className={`text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    No questions yet
-                  </Text>
-                </View>
-              ) : (
-                questions.map((q, idx) => {
-                  return (
-                    <View
-                      key={idx}
-                      className={`mb-3 p-3 rounded-lg border ${
-                        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                      }`}
-                    >
-                      <View className="flex-row items-center justify-between mb-2">
-                        <View className="flex-row items-center gap-2 flex-1">
-                          <View className={`px-2 py-1 rounded ${
-                            isDark ? 'bg-blue-900/30' : 'bg-blue-100'
-                          }`}>
-                            <Text className={`text-xs font-bold ${
-                              isDark ? 'text-blue-400' : 'text-blue-600'
-                            }`}>
-                              #{idx + 1}
-                            </Text>
-                          </View>
-                          <View className="flex-row gap-2">
-                            <View className={`px-2 py-1 rounded ${
-                              q.question_type === 'mcq' ? 'bg-purple-100 dark:bg-purple-900/30' :
-                              q.question_type === 'code' ? 'bg-orange-100 dark:bg-orange-900/30' :
-                              'bg-green-100 dark:bg-green-900/30'
-                            }`}>
-                              <Text className={`text-xs font-medium ${
-                                q.question_type === 'mcq' ? 'text-purple-600 dark:text-purple-400' :
-                                q.question_type === 'code' ? 'text-orange-600 dark:text-orange-400' :
-                                'text-green-600 dark:text-green-400'
-                              }`}>
-                                {q.question_type.toUpperCase()}
-                              </Text>
-                            </View>
-                            <Text className={`text-xs font-bold ${
-                              isDark ? 'text-gray-400' : 'text-gray-600'
-                            }`}>
-                              {q.points}pts
-                            </Text>
-                          </View>
-                        </View>
-                        <Pressable
-                          onPress={() => {
-                            setEditingId(q.id);
-                            let parsedOptions: string[] = ['', '', '', ''];
-                            if (q.question_type === 'mcq' && q.options) {
-                              try {
-                                const opts = typeof q.options === 'string' ? JSON.parse(q.options) : Array.isArray(q.options) ? q.options : [];
-                                parsedOptions = opts.map((opt: any) => typeof opt === 'string' ? opt : (opt.text || ''));
-                                while (parsedOptions.length < 4) parsedOptions.push('');
-                              } catch { parsedOptions = ['', '', '', '']; }
-                            }
-                            setEditForm({
-                              question_text: q.question_text,
-                              points: q.points.toString(),
-                              correct_answer: q.correct_answer || '',
-                              options: parsedOptions,
-                              test_cases: q.test_cases || [],
-                              expandedId: q.id
-                            });
-                          }}
-                          className={`p-2 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
-                        >
-                          <Edit size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-                        </Pressable>
-                      </View>
-                      {editingId === q.id ? (
-                        // Edit mode
-                        <View>
-                          <TextInput
-                            value={editForm.question_text}
-                            onChangeText={text => setEditForm(f => ({ ...f, question_text: text }))}
-                            placeholder="Question text"
-                            className={`mb-2 px-3 py-2 rounded border ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
-                          />
-                          {q.question_type === 'mcq' && (
-                            <>
-                              {editForm.options.map((opt, i) => (
-                                <View key={i} className="mb-2 flex-row items-center gap-2">
+                        {editingId === q.id ? (
+                          // Edit mode
+                          <View>
+                            <TextInput
+                              value={editForm.question_text}
+                              onChangeText={text => setEditForm(f => ({ ...f, question_text: text }))}
+                              placeholder="Question text"
+                              className={`mb-2 px-3 py-2 rounded border ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
+                            />
+                            {q.question_type === 'mcq' && (
+                              <>
+                                {editForm.options.map((opt, i) => (
+                                  <View key={i} className="mb-2 flex-row items-center gap-2">
+                                    <Pressable
+                                      onPress={() => setEditForm(f => ({ ...f, correct_answer: opt }))}
+                                      className={`w-5 h-5 rounded border-2 items-center justify-center ${
+                                        editForm.correct_answer === opt
+                                          ? 'bg-green-600 border-green-600'
+                                          : isDark ? 'border-gray-600' : 'border-gray-300'
+                                      }`}
+                                    >
+                                      {editForm.correct_answer === opt && (
+                                        <Text className="text-white text-xs font-bold">✓</Text>
+                                      )}
+                                    </Pressable>
+                                    <TextInput
+                                      value={opt}
+                                      onChangeText={text => {
+                                        const newOpts = [...editForm.options];
+                                        newOpts[i] = text;
+                                        setEditForm(f => ({ ...f, options: newOpts }));
+                                      }}
+                                      placeholder={`Option ${i + 1}`}
+                                      className={`flex-1 px-3 py-2 rounded border ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
+                                    />
+                                  </View>
+                                ))}
+                                <Text className={`mb-2 text-xs ${isDark ? 'text-green-400' : 'text-green-700'}`}>Tap a choice to mark as correct</Text>
+                              </>
+                            )}
+                            {q.question_type === 'theory' && (
+                              <TextInput
+                                value={editForm.correct_answer}
+                                onChangeText={text => setEditForm(f => ({ ...f, correct_answer: text }))}
+                                placeholder="Model answer"
+                                className={`mb-2 px-3 py-2 rounded border ${isDark ? 'bg-purple-900 border-purple-700 text-white' : 'bg-purple-50 border-purple-300 text-gray-900'}`}
+                              />
+                            )}
+                            {q.question_type === 'code' && (
+                              <View className="mb-4">
+                                <View className="flex-row items-center justify-between mb-2">
+                                  <Text className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Test Cases
+                                  </Text>
                                   <Pressable
-                                    onPress={() => setEditForm(f => ({ ...f, correct_answer: opt }))}
-                                    className={`w-5 h-5 rounded border-2 items-center justify-center ${
-                                      editForm.correct_answer === opt
-                                        ? 'bg-green-600 border-green-600'
-                                        : isDark ? 'border-gray-600' : 'border-gray-300'
+                                    onPress={() => setEditForm({
+                                      ...editForm,
+                                      test_cases: [...editForm.test_cases, { input: '', expected_output: '', points: 1 }]
+                                    })}
+                                    className={`px-3 py-1 rounded-lg ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`}
+                                  >
+                                    <Text className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+                                      + Add Test Case
+                                    </Text>
+                                  </Pressable>
+                                </View>
+
+                                {editForm.test_cases.map((testCase, idx) => (
+                                  <View key={idx} className={`mb-3 p-3 rounded-lg border ${
+                                    isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-300'
+                                  }`}>
+                                    <View className="flex-row items-center justify-between mb-2">
+                                      <Text className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        Test Case {idx + 1}
+                                      </Text>
+                                      <Pressable
+                                        onPress={() => {
+                                          const newTestCases = editForm.test_cases.filter((_, i) => i !== idx);
+                                          setEditForm({ ...editForm, test_cases: newTestCases });
+                                        }}
+                                        className={`p-1 rounded ${isDark ? 'bg-red-900/30' : 'bg-red-100'}`}
+                                      >
+                                        <X size={16} color="#ef4444" />
+                                      </Pressable>
+                                    </View>
+
+                                    <View className="mb-2">
+                                      <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Input
+                                      </Text>
+                                      <TextInput
+                                        value={testCase.input}
+                                        onChangeText={(text) => {
+                                          const newTestCases = [...editForm.test_cases];
+                                          newTestCases[idx].input = text;
+                                          setEditForm({ ...editForm, test_cases: newTestCases });
+                                        }}
+                                        placeholder="Enter test input"
+                                        placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+                                        className={`px-3 py-2 rounded border ${
+                                          isDark
+                                            ? 'bg-gray-800 border-gray-600 text-white'
+                                            : 'bg-white border-gray-300 text-gray-900'
+                                        }`}
+                                      />
+                                    </View>
+
+                                    <View className="mb-2">
+                                      <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Expected Output
+                                      </Text>
+                                      <TextInput
+                                        value={testCase.expected_output}
+                                        onChangeText={(text) => {
+                                          const newTestCases = [...editForm.test_cases];
+                                          newTestCases[idx].expected_output = text;
+                                          setEditForm({ ...editForm, test_cases: newTestCases });
+                                        }}
+                                        placeholder="Enter expected output"
+                                        placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+                                        className={`px-3 py-2 rounded border ${
+                                          isDark
+                                            ? 'bg-gray-800 border-gray-600 text-white'
+                                            : 'bg-white border-gray-300 text-gray-900'
+                                        }`}
+                                      />
+                                    </View>
+
+                                    <View>
+                                      <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Points
+                                      </Text>
+                                      <TextInput
+                                        value={testCase.points.toString()}
+                                        onChangeText={(text) => {
+                                          const newTestCases = [...editForm.test_cases];
+                                          newTestCases[idx].points = Number(text) || 1;
+                                          setEditForm({ ...editForm, test_cases: newTestCases });
+                                        }}
+                                        placeholder="1"
+                                        placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
+                                        keyboardType="numeric"
+                                        className={`px-3 py-2 rounded border ${
+                                          isDark
+                                            ? 'bg-gray-800 border-gray-600 text-white'
+                                            : 'bg-white border-gray-300 text-gray-900'
+                                        }`}
+                                      />
+                                    </View>
+                                  </View>
+                                ))}
+
+                                {editForm.test_cases.length === 0 && (
+                                  <Text className={`text-sm text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    No test cases added yet. Click "Add Test Case" to add one.
+                                  </Text>
+                                )}
+                              </View>
+                            )}
+                            <View className="flex-row gap-2 mt-2">
+                              <Pressable
+                                onPress={() => setEditingId(null)}
+                                className={`flex-1 py-2 rounded border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}
+                              >
+                                <Text className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Cancel</Text>
+                              </Pressable>
+                              <Pressable
+                                onPress={() => handleSave(q.id, q.question_type)}
+                                className={`flex-1 py-2 rounded ${editForm.question_text.trim() ? 'bg-blue-600' : 'bg-gray-400'}`}
+                                disabled={!editForm.question_text.trim()}
+                              >
+                                <Text className="text-center text-white font-semibold">Save</Text>
+                              </Pressable>
+                            </View>
+                          </View>
+                        ) : (
+                          // Always show full view
+                          <View>
+                            <Text className={`mb-2 text-base ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{q.question_text}</Text>
+                            {q.question_type === 'mcq' && q.options && (
+                              <View className="mb-2">
+                                <Text className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Options:</Text>
+                                {(() => {
+                                  try {
+                                    const opts = typeof q.options === 'string' ? JSON.parse(q.options) : Array.isArray(q.options) ? q.options : [];
+                                    return opts.map((opt: any, i: number) => {
+                                      const optionText = typeof opt === 'string' ? opt : (opt.text || '');
+                                      const isCorrect = typeof opt === 'object' ? opt.is_correct : (optionText === q.correct_answer);
+                                      return (
+                                        <View key={i} className={`flex-row items-center mb-1 p-2 rounded ${isCorrect ? 'bg-green-100 border border-green-500' : isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                                          <Text className={`mr-2 text-xs font-bold ${isCorrect ? 'text-green-700' : isDark ? 'text-gray-400' : 'text-gray-600'}`}>{String.fromCharCode(65 + i)}.</Text>
+                                          <Text className={`text-sm ${isCorrect ? 'text-green-700 font-semibold' : isDark ? 'text-gray-300' : 'text-gray-700'}`}>{optionText}{isCorrect ? ' ✓' : ''}</Text>
+                                        </View>
+                                      );
+                                    });
+                                  } catch {
+                                    return null;
+                                  }
+                                })()}
+                              </View>
+                            )}
+                            {q.question_type === 'theory' && q.correct_answer && (
+                              <View className="mb-2">
+                                <Text className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Model Answer:</Text>
+                                <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{q.correct_answer}</Text>
+                              </View>
+                            )}
+                            {q.question_type === 'code' && q.test_cases && q.test_cases.length > 0 && (
+                              <View className="mb-2">
+                                <Text className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Test Cases:
+                                </Text>
+                                {q.test_cases.map((testCase, idx) => (
+                                  <View
+                                    key={idx}
+                                    className={`mb-2 p-3 rounded-lg border ${
+                                      isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'
                                     }`}
                                   >
-                                    {editForm.correct_answer === opt && (
-                                      <Text className="text-white text-xs font-bold">✓</Text>
-                                    )}
-                                  </Pressable>
-                                  <TextInput
-                                    value={opt}
-                                    onChangeText={text => {
-                                      const newOpts = [...editForm.options];
-                                      newOpts[i] = text;
-                                      setEditForm(f => ({ ...f, options: newOpts }));
-                                    }}
-                                    placeholder={`Option ${i + 1}`}
-                                    className={`flex-1 px-3 py-2 rounded border ${isDark ? 'bg-gray-900 border-gray-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
-                                  />
-                                </View>
-                              ))}
-                              <Text className={`mb-2 text-xs ${isDark ? 'text-green-400' : 'text-green-700'}`}>Tap a choice to mark as correct</Text>
-                            </>
-                          )}
-                          {q.question_type === 'theory' && (
-                            <TextInput
-                              value={editForm.correct_answer}
-                              onChangeText={text => setEditForm(f => ({ ...f, correct_answer: text }))}
-                              placeholder="Model answer"
-                              className={`mb-2 px-3 py-2 rounded border ${isDark ? 'bg-purple-900 border-purple-700 text-white' : 'bg-purple-50 border-purple-300 text-gray-900'}`}
-                            />
-                          )}
-                          {q.question_type === 'code' && (
-                            <View className="mb-4">
-                              <View className="flex-row items-center justify-between mb-2">
-                                <Text className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                  Test Cases
-                                </Text>
-                                <Pressable
-                                  onPress={() => setEditForm({
-                                    ...editForm,
-                                    test_cases: [...editForm.test_cases, { input: '', expected_output: '', points: 1 }]
-                                  })}
-                                  className={`px-3 py-1 rounded-lg ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`}
-                                >
-                                  <Text className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
-                                    + Add Test Case
-                                  </Text>
-                                </Pressable>
-                              </View>
-
-                              {editForm.test_cases.map((testCase, idx) => (
-                                <View key={idx} className={`mb-3 p-3 rounded-lg border ${
-                                  isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-300'
-                                }`}>
-                                  <View className="flex-row items-center justify-between mb-2">
-                                    <Text className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                      Test Case {idx + 1}
-                                    </Text>
-                                    <Pressable
-                                      onPress={() => {
-                                        const newTestCases = editForm.test_cases.filter((_, i) => i !== idx);
-                                        setEditForm({ ...editForm, test_cases: newTestCases });
-                                      }}
-                                      className={`p-1 rounded ${isDark ? 'bg-red-900/30' : 'bg-red-100'}`}
-                                    >
-                                      <X size={16} color="#ef4444" />
-                                    </Pressable>
-                                  </View>
-
-                                  <View className="mb-2">
-                                    <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                      Input
-                                    </Text>
-                                    <TextInput
-                                      value={testCase.input}
-                                      onChangeText={(text) => {
-                                        const newTestCases = [...editForm.test_cases];
-                                        newTestCases[idx].input = text;
-                                        setEditForm({ ...editForm, test_cases: newTestCases });
-                                      }}
-                                      placeholder="Enter test input"
-                                      placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                                      className={`px-3 py-2 rounded border ${
-                                        isDark
-                                          ? 'bg-gray-800 border-gray-600 text-white'
-                                          : 'bg-white border-gray-300 text-gray-900'
-                                      }`}
-                                    />
-                                  </View>
-
-                                  <View className="mb-2">
-                                    <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                      Expected Output
-                                    </Text>
-                                    <TextInput
-                                      value={testCase.expected_output}
-                                      onChangeText={(text) => {
-                                        const newTestCases = [...editForm.test_cases];
-                                        newTestCases[idx].expected_output = text;
-                                        setEditForm({ ...editForm, test_cases: newTestCases });
-                                      }}
-                                      placeholder="Enter expected output"
-                                      placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                                      className={`px-3 py-2 rounded border ${
-                                        isDark
-                                          ? 'bg-gray-800 border-gray-600 text-white'
-                                          : 'bg-white border-gray-300 text-gray-900'
-                                      }`}
-                                    />
-                                  </View>
-
-                                  <View>
-                                    <Text className={`text-xs mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                      Points
-                                    </Text>
-                                    <TextInput
-                                      value={testCase.points.toString()}
-                                      onChangeText={(text) => {
-                                        const newTestCases = [...editForm.test_cases];
-                                        newTestCases[idx].points = Number(text) || 1;
-                                        setEditForm({ ...editForm, test_cases: newTestCases });
-                                      }}
-                                      placeholder="1"
-                                      placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-                                      keyboardType="numeric"
-                                      className={`px-3 py-2 rounded border ${
-                                        isDark
-                                          ? 'bg-gray-800 border-gray-600 text-white'
-                                          : 'bg-white border-gray-300 text-gray-900'
-                                      }`}
-                                    />
-                                  </View>
-                                </View>
-                              ))}
-
-                              {editForm.test_cases.length === 0 && (
-                                <Text className={`text-sm text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                  No test cases added yet. Click "Add Test Case" to add one.
-                                </Text>
-                              )}
-                            </View>
-                          )}
-                          <View className="flex-row gap-2 mt-2">
-                            <Pressable
-                              onPress={() => setEditingId(null)}
-                              className={`flex-1 py-2 rounded border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}
-                            >
-                              <Text className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Cancel</Text>
-                            </Pressable>
-                            <Pressable
-                              onPress={() => handleSave(q.id, q.question_type)}
-                              className={`flex-1 py-2 rounded ${editForm.question_text.trim() ? 'bg-blue-600' : 'bg-gray-400'}`}
-                              disabled={!editForm.question_text.trim()}
-                            >
-                              <Text className="text-center text-white font-semibold">Save</Text>
-                            </Pressable>
-                          </View>
-                        </View>
-                      ) : (
-                        // Always show full view
-                        <View>
-                          <Text className={`mb-2 text-base ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{q.question_text}</Text>
-                          {q.question_type === 'mcq' && q.options && (
-                            <View className="mb-2">
-                              <Text className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Options:</Text>
-                              {(() => {
-                                try {
-                                  const opts = typeof q.options === 'string' ? JSON.parse(q.options) : Array.isArray(q.options) ? q.options : [];
-                                  return opts.map((opt: any, i: number) => {
-                                    const optionText = typeof opt === 'string' ? opt : (opt.text || '');
-                                    const isCorrect = typeof opt === 'object' ? opt.is_correct : (optionText === q.correct_answer);
-                                    return (
-                                      <View key={i} className={`flex-row items-center mb-1 p-2 rounded ${isCorrect ? 'bg-green-100 border border-green-500' : isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                                        <Text className={`mr-2 text-xs font-bold ${isCorrect ? 'text-green-700' : isDark ? 'text-gray-400' : 'text-gray-600'}`}>{String.fromCharCode(65 + i)}.</Text>
-                                        <Text className={`text-sm ${isCorrect ? 'text-green-700 font-semibold' : isDark ? 'text-gray-300' : 'text-gray-700'}`}>{optionText}{isCorrect ? ' ✓' : ''}</Text>
+                                    <View className="flex-row items-center justify-between mb-2">
+                                      <Text className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Test Case {idx + 1}
+                                      </Text>
+                                      <View className={`px-2 py-1 rounded-full ${isDark ? 'bg-yellow-900/30' : 'bg-yellow-100'}`}>
+                                        <Text className={`text-xs font-semibold ${isDark ? 'text-yellow-300' : 'text-yellow-700'}`}>
+                                          {testCase.points} pts
+                                        </Text>
                                       </View>
-                                    );
-                                  });
-                                } catch {
-                                  return null;
-                                }
-                              })()}
-                            </View>
-                          )}
-                          {q.question_type === 'theory' && q.correct_answer && (
-                            <View className="mb-2">
-                              <Text className={`text-sm font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Model Answer:</Text>
-                              <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{q.correct_answer}</Text>
-                            </View>
-                          )}
-                          {q.question_type === 'code' && q.test_cases && q.test_cases.length > 0 && (
-                            <View className="mb-2">
-                              <Text className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                Test Cases:
-                              </Text>
-                              {q.test_cases.map((testCase, idx) => (
-                                <View
-                                  key={idx}
-                                  className={`mb-2 p-3 rounded-lg border ${
-                                    isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'
-                                  }`}
-                                >
-                                  <View className="flex-row items-center justify-between mb-2">
-                                    <Text className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                      Test Case {idx + 1}
-                                    </Text>
-                                    <View className={`px-2 py-1 rounded-full ${isDark ? 'bg-yellow-900/30' : 'bg-yellow-100'}`}>
-                                      <Text className={`text-xs font-semibold ${isDark ? 'text-yellow-300' : 'text-yellow-700'}`}>
-                                        {testCase.points} pts
+                                    </View>
+
+                                    <View className="mb-2">
+                                      <Text className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                                        Input:
+                                      </Text>
+                                      <Text className={`text-sm font-mono p-2 rounded ${
+                                        isDark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
+                                      }`}>
+                                        {testCase.input || 'No input'}
+                                      </Text>
+                                    </View>
+
+                                    <View>
+                                      <Text className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                                        Expected Output:
+                                      </Text>
+                                      <Text className={`text-sm font-mono p-2 rounded ${
+                                        isDark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
+                                      }`}>
+                                        {testCase.expected_output || 'No output expected'}
                                       </Text>
                                     </View>
                                   </View>
-
-                                  <View className="mb-2">
-                                    <Text className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                      Input:
-                                    </Text>
-                                    <Text className={`text-sm font-mono p-2 rounded ${
-                                      isDark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
-                                    }`}>
-                                      {testCase.input || 'No input'}
-                                    </Text>
-                                  </View>
-
-                                  <View>
-                                    <Text className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                      Expected Output:
-                                    </Text>
-                                    <Text className={`text-sm font-mono p-2 rounded ${
-                                      isDark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
-                                    }`}>
-                                      {testCase.expected_output || 'No output expected'}
-                                    </Text>
-                                  </View>
-                                </View>
-                              ))}
-                            </View>
-                          )}
-                        </View>
-                      )}
-                    </View>
-                  );
-                })
-              )}
-            </ScrollView>
-          </View>
+                                ))}
+                              </View>
+                            )}
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })
+                )}
+                <View className="mt-14"/>
+              </ScrollView>
+            </View>
+          )}
         </View>
       )}
     </View>

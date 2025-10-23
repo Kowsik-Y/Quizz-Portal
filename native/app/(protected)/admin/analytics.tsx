@@ -15,7 +15,6 @@ import {
   FileText
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -65,7 +64,7 @@ export default function AnalyticsPage() {
         activeTests: tests.filter((t: any) => t.is_active).length,
       });
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
+      console.error('Failed to fetch stats');
     } finally {
       setLoading(false);
     }

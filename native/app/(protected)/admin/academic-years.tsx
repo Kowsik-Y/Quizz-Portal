@@ -2,7 +2,6 @@ import { View, ScrollView, TextInput, Pressable, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Trash2, Edit, Calendar } from 'lucide-react-native';
 import api from '@/lib/api';
 
@@ -41,7 +40,6 @@ export default function AcademicYearsPage() {
       const response = await api.get('/academic-years');
       setYears(response.data.academicYears || response.data);
     } catch (error) {
-      console.error('Failed to fetch academic years:', error);
       Alert.alert('Error', 'Failed to load academic years');
     } finally {
       setLoading(false);
@@ -68,7 +66,6 @@ export default function AcademicYearsPage() {
       setEditingId(null);
       fetchYears();
     } catch (error: any) {
-      console.error('Failed to save academic year:', error);
       Alert.alert('Error', error.response?.data?.error || 'Failed to save academic year');
     }
   };

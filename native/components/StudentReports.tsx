@@ -61,7 +61,6 @@ export default function StudentReports({ testId, studentId }: StudentReportsProp
       const response = await attemptAPI.getStudentAttempts(studentId, testId);
       setAttempts(response.data.attempts || []);
     } catch (error: any) {
-      console.error('Error loading student attempts:', error);
       showToast.error('Failed to load test attempts', { title: 'Error' });
     } finally {
       setLoading(false);
@@ -80,7 +79,6 @@ export default function StudentReports({ testId, studentId }: StudentReportsProp
       setSelectedAttempt(response.data);
       setShowDetail(true);
     } catch (error: any) {
-      console.error('Error loading attempt detail:', error);
       showToast.error('Failed to load attempt details', { title: 'Error' });
     } finally {
       setLoadingDetail(false);

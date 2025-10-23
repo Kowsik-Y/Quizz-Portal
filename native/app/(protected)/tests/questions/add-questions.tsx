@@ -6,7 +6,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { questionAPI, testAPI } from '@/lib/api';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Plus, Trash2, CheckCircle, Code, FileText } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Test } from '@/lib/types';
 import { useCustomAlert } from '@/components/ui/custom-alert';
 
@@ -74,7 +73,7 @@ export default function AddQuestionsScreen() {
         setQuestionType('mcq');
       }
     } catch (error) {
-      console.error('Failed to load test:', error);
+      showAlert('Error', 'Failed to load test data');
     }
   };
 

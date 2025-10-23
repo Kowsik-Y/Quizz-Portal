@@ -1,3 +1,4 @@
+import React, { memo } from 'react';
 import { View, ScrollView, Pressable, Platform, Dimensions } from 'react-native';
 import { Text } from '@/components/ui/text';
 import {
@@ -21,7 +22,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { useCourseStore } from '@/stores/courseStore';
 import { useUserStore } from '@/stores/userStore';
 import { User } from '@/lib/types';
-import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
   const { colorScheme } = useColorScheme();
@@ -45,7 +45,6 @@ export default function HomePage() {
     }
   }, [user, fetchCourses, fetchStats]);
 
-  // User stats (with real data from Zustand)
   const stats = [
     {
       icon: BookOpen,
@@ -73,7 +72,6 @@ export default function HomePage() {
     },
   ];
 
-  // Stat card component
   const StatCard = ({ icon: Icon, label, value, color }: any) => (
     <View
       className={`flex-1 rounded-xl p-4 w-full ${isDark ? 'bg-gray-800' : 'bg-white'
@@ -87,97 +85,69 @@ export default function HomePage() {
     </View>
   );
 
-  // Course card component with full width grid support
-  const CourseCard = ({ course }: any) => {
-    const hasCode = course.test_count > 0; // Check if course has coding tests
-    console.log(course);
+  const CourseCard = memo(({ course }: any) => {
+    const hasCode = (course?.test_count || 0) > 0;
+
+    const handlePress = () => {
+      router.push({ pathname: '/courses/course-details', params: { id: course.id } } as any);
+    };
+
     return (
       <Pressable
-        onPress={() => router.push({
-          pathname: '/courses/course-details',
-          params: { id: course.id }
-        } as any)}
-        className={`rounded-2xl p-5 mb-4 w-full md:w-[calc(50%-12px)] xl:w-[calc(33.333%-12px)] flex-wrap ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-          }`}
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel={`${course.title} course card`}
+        android_ripple={{ color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        className={`rounded-2xl p-4 mb-4 w-full md:w-[calc(50%-12px)] xl:w-[calc(33.333%-12px)] ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
       >
-        <View className='items-stretch w-full'>
-          {/* Department Badge */}
-
-          {course.department_code && (
-            <View className="flex-row items-center">
-              <View className={`px-3 py-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'
-                }`}>
-                <Text className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {course.department_code}
-                </Text>
-              </View>
+        <View className="w-full">
+          <View className="flex-row justify-between items-start">
+            <View style={{ flex: 1 }}>
+              <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`} numberOfLines={2}>
+                {course.title}
+              </Text>
             </View>
-          )}
 
-          {/* Course Title */}
+            {course.department_code && (
+              <View className={`ml-3 px-2 py-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                <Text className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{course.department_code}</Text>
+              </View>
+            )}
+          </View>
 
-          <Text
-            className={`text-lg mb-2 font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}
-            numberOfLines={2}
-          >
-            {course.title}
-          </Text>
-
-          {/* Course Code */}
-          {course.code && (
-            <Text className={`text-xs font-semibold mb-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-              {course.code}
-            </Text>
-          )}
-
-          {/* Description */}
           {course.description && (
-            <Text
-              className={`text-sm mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
-              numberOfLines={2}
-            >
+            <Text className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} numberOfLines={2}>
               {course.description}
             </Text>
           )}
 
-          {/* Course Info */}
-          <View className="flex-row flex-wrap gap-3 mb-3">
-            {/* Tests Count */}
+          <View className="flex-row flex-wrap items-center gap-3 mt-3">
             <View className="flex-row items-center">
               <FileText size={14} color={isDark ? '#9ca3af' : '#6b7280'} />
-              <Text className={`ml-1 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                {course.test_count || 0} Tests
-              </Text>
+              <Text className={`ml-1 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{course.test_count || 0} Tests</Text>
             </View>
 
-            {/* Has Code Compiler Badge */}
             {hasCode && (
-              <View className="flex-row items-center bg-green-500/20 px-2 py-1 rounded">
+              <View className="flex-row items-center bg-green-500/10 px-2 py-1 rounded">
                 <Code2 size={12} color="#10b981" />
                 <Text className="text-green-500 text-xs font-medium ml-1">Code</Text>
               </View>
             )}
 
-            {/* Semester */}
             {course.semester && (
               <View className="flex-row items-center">
                 <Clock size={14} color={isDark ? '#9ca3af' : '#6b7280'} />
-                <Text className={`ml-1 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Sem {course.semester}
-                </Text>
+                <Text className={`ml-1 text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Sem {course.semester}</Text>
               </View>
             )}
-
           </View>
 
-          {/* Teacher Info */}
           {course.teacher_name && (
-            <View className="flex-row items-center justify-between pt-3 w-full border-t border-gray-700/50">
+            <View className="flex-row items-center justify-between pt-3 w-full border-t mt-3" style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
               <View className="flex-row items-center">
                 <GraduationCap size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-                <Text className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {course.teacher_name}
-                </Text>
+                <Text className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{course.teacher_name}</Text>
               </View>
               <ChevronRight size={16} color="#3b82f6" />
             </View>
@@ -185,7 +155,7 @@ export default function HomePage() {
         </View>
       </Pressable>
     );
-  };
+  });
   return (
     <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <ScrollView
@@ -270,35 +240,6 @@ export default function HomePage() {
           </View>
         )}
 
-        {/* Quick Actions - Teacher/Admin Only */}
-        {(user?.role === 'teacher' || user?.role === 'admin') && (
-          <View className="mb-6">
-            <Text
-              className={`text-sm font-semibold mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'
-                }`}
-            >
-              QUICK ACTIONS
-            </Text>
-            <View className="flex-row gap-3">
-              <Button variant={'default'} size={'lg'} ><Text>Hello</Text></Button>
-              <Pressable
-                onPress={() => router.push('/courses/create-course')}
-                className="flex-1 bg-blue-500 rounded-xl p-4 flex-row items-center justify-center"
-              >
-                <BookOpen size={20} color="#fff" />
-                <Text className="text-white font-bold ml-2">Create Course</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => router.push('/tests/create-test')}
-                className="flex-1 bg-green-500 rounded-xl p-4 flex-row items-center justify-center"
-              >
-                <FileText size={20} color="#fff" />
-                <Text className="text-white font-bold ml-2">Create Test</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
-
         {/* Courses Section */}
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-4">
@@ -363,24 +304,6 @@ export default function HomePage() {
             </View>
           )}
         </View>
-
-        {/* Achievement Banner */}
-        {user?.role === 'student' && (
-          <View className="mb-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-6">
-            <View className="flex-row items-center">
-              <View className="bg-white/20 rounded-full p-3">
-                <Zap size={24} color="#fff" />
-              </View>
-              <View className="ml-4 flex-1">
-                <Text className="text-white font-bold text-lg">Keep Going!</Text>
-                <Text className="text-white/80 text-sm mt-1">
-                  You're on a 7-day streak. Complete one more quiz today!
-                </Text>
-              </View>
-              <CheckCircle2 size={32} color="#fff" />
-            </View>
-          </View>
-        )}
       </ScrollView>
     </View>
   );

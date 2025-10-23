@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TextInput, Platform, Pressable } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
-import { Mail, Lock, User, GraduationCap, Hash, ChevronDown, ShieldAlert } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { departmentAPI, authAPI } from '@/lib/api';
+import { Mail, Lock, User, Hash, ChevronDown, ShieldAlert } from 'lucide-react-native';
+import { departmentAPI } from '@/lib/api';
 import type { Department } from '@/lib/types';
 import { useCustomAlert } from '@/components/ui/custom-alert';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
-  const { showAlert } = useCustomAlert();
   const isWeb = Platform.OS === 'web';
 
   // Check if user is admin
@@ -22,10 +20,10 @@ export default function RegisterScreen() {
   if (!isAdmin) {
     return (
       <View className="flex-1 bg-background">
-        <ScrollView 
+        <ScrollView
           className="flex-1"
-          contentContainerStyle={{ 
-            padding: isWeb ? 48 : 24, 
+          contentContainerStyle={{
+            padding: isWeb ? 48 : 24,
             paddingTop: isWeb ? 80 : 60,
             alignItems: 'center',
             justifyContent: 'center'
@@ -51,7 +49,7 @@ export default function RegisterScreen() {
                 📧 Need an Account?
               </Text>
               <Text className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Please contact your system administrator to request account creation. 
+                Please contact your system administrator to request account creation.
                 They will create an account for you with the appropriate role and permissions.
               </Text>
               <Text className="font-semibold text-sm text-foreground mb-2">
@@ -86,7 +84,7 @@ export default function RegisterScreen() {
 function AdminCreateUserForm() {
   const router = useRouter();
   const { register, loading } = useAuthStore();
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -99,7 +97,7 @@ function AdminCreateUserForm() {
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
 
   const isWeb = Platform.OS === 'web';
-
+  const { showAlert } = useCustomAlert();
   // Load departments
   useEffect(() => {
     loadDepartments();
@@ -113,7 +111,7 @@ function AdminCreateUserForm() {
         setSelectedDept(response.data.departments[0]);
       }
     } catch (error) {
-      console.error('Failed to load departments:', error);
+      showAlert('Error', 'Failed to load departments');
     }
   };
 
@@ -140,14 +138,15 @@ function AdminCreateUserForm() {
       formData.password,
       formData.role
     );
-    
+
     if (success) {
       showAlert('Success', 'User created successfully!', [
-        { text: 'OK', onPress: () => {
-          // Reset form
-          setFormData({ email: '', password: '', confirmPassword: '', name: '', role: 'student' });
-          router.replace('/(tabs)/home');
-        }}
+        {
+          text: 'OK', onPress: () => {
+            setFormData({ email: '', password: '', confirmPassword: '', name: '', role: 'student' });
+            router.replace('/(protected)/(tabs)/home');
+          }
+        }
       ]);
     }
     // Error handling is done by the store with toast notifications
@@ -155,10 +154,10 @@ function AdminCreateUserForm() {
 
   return (
     <View className="flex-1 bg-background">
-      <ScrollView 
+      <ScrollView
         className="flex-1"
-        contentContainerStyle={{ 
-          padding: isWeb ? 48 : 24, 
+        contentContainerStyle={{
+          padding: isWeb ? 48 : 24,
           paddingTop: isWeb ? 60 : 40,
           alignItems: isWeb ? 'center' : 'stretch'
         }}
@@ -181,9 +180,8 @@ function AdminCreateUserForm() {
             {/* Email Field */}
             <View>
               <Text className="text-sm font-semibold mb-2 text-foreground">Email Address *</Text>
-              <View className={`flex-row items-center rounded-xl px-4 py-2 sm:py-4 border ${
-                isWeb ? 'bg-secondary/50' : 'bg-secondary'
-              } border-border`}>
+              <View className={`flex-row items-center rounded-xl px-4 py-2 sm:py-4 border ${isWeb ? 'bg-secondary/50' : 'bg-secondary'
+                } border-border`}>
                 <Mail size={20} color="#666666" />
                 <TextInput
                   className="flex-1 ml-3 text-base text-foreground"
@@ -206,15 +204,13 @@ function AdminCreateUserForm() {
                   <Pressable
                     key={role}
                     onPress={() => setFormData(prev => ({ ...prev, role }))}
-                    className={`flex-1 py-3 rounded-xl border ${
-                      formData.role === role
+                    className={`flex-1 py-3 rounded-xl border ${formData.role === role
                         ? 'bg-primary border-primary'
                         : isWeb ? 'bg-secondary/50 border-border' : 'bg-secondary border-border'
-                    }`}
+                      }`}
                   >
-                    <Text className={`text-center font-semibold capitalize ${
-                      formData.role === role ? 'text-white' : 'text-foreground'
-                    }`}>
+                    <Text className={`text-center font-semibold capitalize ${formData.role === role ? 'text-white' : 'text-foreground'
+                      }`}>
                       {role}
                     </Text>
                   </Pressable>
@@ -225,9 +221,8 @@ function AdminCreateUserForm() {
             {/* Full Name Field */}
             <View>
               <Text className="text-sm font-semibold mb-2 text-foreground">Full Name *</Text>
-              <View className={`flex-row items-center rounded-xl px-4 py-2 sm:py-4 border ${
-                isWeb ? 'bg-secondary/50' : 'bg-secondary'
-              } border-border`}>
+              <View className={`flex-row items-center rounded-xl px-4 py-2 sm:py-4 border ${isWeb ? 'bg-secondary/50' : 'bg-secondary'
+                } border-border`}>
                 <User size={20} color="#666666" />
                 <TextInput
                   className="flex-1 ml-3 text-base text-foreground"
@@ -245,11 +240,10 @@ function AdminCreateUserForm() {
             {formData.role !== 'admin' && (
               <View>
                 <Text className="text-sm font-semibold mb-2 text-foreground">Department</Text>
-                <Pressable 
+                <Pressable
                   onPress={() => setShowDeptPicker(!showDeptPicker)}
-                  className={`flex-row items-center justify-between rounded-xl px-4 py-3 sm:py-4 border ${
-                    isWeb ? 'bg-secondary/50' : 'bg-secondary'
-                  } border-border`}
+                  className={`flex-row items-center justify-between rounded-xl px-4 py-3 sm:py-4 border ${isWeb ? 'bg-secondary/50' : 'bg-secondary'
+                    } border-border`}
                 >
                   <View className="flex-row items-center flex-1">
                     <Hash size={20} color="#666666" />
@@ -259,7 +253,7 @@ function AdminCreateUserForm() {
                   </View>
                   <ChevronDown size={20} color="#666666" />
                 </Pressable>
-                
+
                 {showDeptPicker && (
                   <View className="mt-2 border border-border rounded-xl overflow-hidden bg-secondary">
                     {departments.map((dept) => (
@@ -269,9 +263,8 @@ function AdminCreateUserForm() {
                           setSelectedDept(dept);
                           setShowDeptPicker(false);
                         }}
-                        className={`p-4 border-b border-border ${
-                          selectedDept?.id === dept.id ? 'bg-primary/10' : ''
-                        }`}
+                        className={`p-4 border-b border-border ${selectedDept?.id === dept.id ? 'bg-primary/10' : ''
+                          }`}
                       >
                         <Text className="font-semibold text-foreground">{dept.code}</Text>
                         <Text className="text-sm text-muted-foreground">{dept.name}</Text>
@@ -285,9 +278,8 @@ function AdminCreateUserForm() {
             {/* Password Field */}
             <View>
               <Text className="text-sm font-semibold mb-2 text-foreground">Password *</Text>
-              <View className={`flex-row items-center rounded-xl px-4 py-2 sm:py-4 border ${
-                isWeb ? 'bg-secondary/50' : 'bg-secondary'
-              } border-border`}>
+              <View className={`flex-row items-center rounded-xl px-4 py-2 sm:py-4 border ${isWeb ? 'bg-secondary/50' : 'bg-secondary'
+                } border-border`}>
                 <Lock size={20} color="#666666" />
                 <TextInput
                   className="flex-1 ml-3 text-base text-foreground"
@@ -305,9 +297,8 @@ function AdminCreateUserForm() {
             {/* Confirm Password Field */}
             <View>
               <Text className="text-sm font-semibold mb-2 text-foreground">Confirm Password *</Text>
-              <View className={`flex-row items-center rounded-xl px-4 py-2 sm:py-4 border ${
-                isWeb ? 'bg-secondary/50' : 'bg-secondary'
-              } border-border`}>
+              <View className={`flex-row items-center rounded-xl px-4 py-2 sm:py-4 border ${isWeb ? 'bg-secondary/50' : 'bg-secondary'
+                } border-border`}>
                 <Lock size={20} color="#666666" />
                 <TextInput
                   className="flex-1 ml-3 text-base text-foreground"
@@ -335,11 +326,9 @@ function AdminCreateUserForm() {
 
             {/* Back to Home Link */}
             <View className="flex-row justify-center items-center mt-4">
-              <Link href="/(tabs)/home" asChild>
-                <Pressable>
-                  <Text className="text-primary font-semibold">← Back to Dashboard</Text>
-                </Pressable>
-              </Link>
+              <Pressable onPress={() => router.replace('/(protected)/(tabs)/home')}>
+                <Text className="text-primary font-semibold">← Back to Dashboard</Text>
+              </Pressable>
             </View>
 
             {/* Role Detection Guide */}

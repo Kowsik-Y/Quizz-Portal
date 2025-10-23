@@ -18,12 +18,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
     // Redirect logic
     if (!user && !isPublicRoute) {
-      // Not authenticated and trying to access protected route
-      console.log('Redirecting to login - no user session');
       router.replace('/login');
     } else if (user && isPublicRoute) {
-      // Already authenticated, redirect away from login
-      console.log('Already authenticated, redirecting to home');
       router.replace('/(protected)/(tabs)/home');
     }
   }, [user, initializing, pathname, router]);

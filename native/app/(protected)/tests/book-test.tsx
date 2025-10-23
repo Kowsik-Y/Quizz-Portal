@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Pressable, Platform, TextInput } from 'react-native';
+import { View, ScrollView, Pressable, TextInput } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { testAPI, bookingAPI } from '@/lib/api';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Calendar, Clock, Award, CheckCircle, XCircle } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Test, TestBooking } from '@/lib/types';
 import { useCustomAlert } from '@/components/ui/custom-alert';
 
@@ -37,7 +36,7 @@ export default function BookTestScreen() {
       const response = await testAPI.getById(testId);
       setTest(response.data.test);
     } catch (error) {
-      console.error('Failed to load test:', error);
+      showAlert('Error', 'Failed to load test data');
     }
   };
 
@@ -49,7 +48,7 @@ export default function BookTestScreen() {
         setMyBooking(booking);
       }
     } catch (error) {
-      console.error('Failed to load booking:', error);
+      showAlert('Error', 'Failed to load your bookings');
     }
   };
 

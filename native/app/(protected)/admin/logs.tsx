@@ -1,4 +1,4 @@
-import { View, ScrollView, Pressable, Platform, TextInput, Alert, RefreshControl } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Alert, RefreshControl } from 'react-native';
 import { Text } from '@/components/ui/text';
 import {
   FileText,
@@ -9,21 +9,16 @@ import {
   Trash2,
   Plus,
   Search,
-  Filter,
-  Calendar,
-  Clock,
-  AlertCircle,
   CheckCircle,
   XCircle,
   RefreshCw
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 interface ActivityLog {
   id: number;
@@ -76,7 +71,6 @@ export default function ActivityLogsPage() {
       setLogs(data.logs);
       setFilteredLogs(data.logs);
     } catch (error) {
-      console.error('Fetch logs error:', error);
       Alert.alert('Error', 'Failed to load activity logs');
     } finally {
       setIsLoading(false);

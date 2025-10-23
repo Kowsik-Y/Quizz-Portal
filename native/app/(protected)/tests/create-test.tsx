@@ -6,7 +6,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { testAPI, courseAPI } from '@/lib/api';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ClipboardList, Calendar, Clock } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { DateTimePicker } from '@/components/DateTimePicker';
 import { useCustomAlert } from '@/components/ui/custom-alert';
 import type { Course } from '@/lib/types';

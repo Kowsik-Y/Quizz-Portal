@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Platform, useWindowDimensions, Pressable } from 'react-native';
+import { View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Platform, useWindowDimensions, Pressable, AppState } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { questionAPI, attemptAPI, codeAPI, testAPI } from '@/lib/api';
@@ -53,6 +53,8 @@ export default function TakeTestScreen() {
   const [testTitle, setTestTitle] = useState<string>('');
   const [testConfig, setTestConfig] = useState<{ show_review_to_students?: boolean } | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | undefined>(undefined);
+  const [testDuration, setTestDuration] = useState<number | undefined>(undefined);
+  const [testStartTime, setTestStartTime] = useState<Date | undefined>(undefined);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('javascript');
   const [customInput, setCustomInput] = useState<string>('');
 
@@ -70,7 +72,7 @@ export default function TakeTestScreen() {
     attemptId,
     enabled: antiCheatEnabled && antiCheatAccepted,
     onViolation: (violation) => {
-      console.log('⚠️ Violation detected:', violation);
+      showAlert('Anti-Cheat Violation', `A violation was detected`);
     }
   });
 
@@ -107,8 +109,15 @@ export default function TakeTestScreen() {
         setTestConfig({
           show_review_to_students: test.show_review_to_students
         });
+
+        // Initialize timer if test has duration
+        if (test.duration_minutes && test.duration_minutes > 0) {
+          const durationInSeconds = test.duration_minutes * 60;
+          setTestDuration(durationInSeconds);
+          setTestStartTime(new Date());
+          setTimeRemaining(durationInSeconds);
+        }
       } catch (error) {
-        console.error('Error fetching test details:', error);
         setTestTitle('Test');
         setTestConfig(null);
       }
@@ -135,7 +144,6 @@ export default function TakeTestScreen() {
 
           const newAttemptId = attemptResponse.data.attempt.id;
           setAttemptId(newAttemptId);
-          console.log('✅ Test attempt created:', newAttemptId);
 
           // Fetch questions immediately with the new attempt ID
           await fetchQuestions(newAttemptId);
@@ -162,7 +170,6 @@ export default function TakeTestScreen() {
       // Fetch questions - use the attemptId from params
       await fetchQuestions(paramAttemptId);
     } catch (error: any) {
-      console.error('Error initializing test:', error);
       showAlert(
         'Error',
         error.response?.data?.error || 'Failed to start test',
@@ -190,7 +197,7 @@ export default function TakeTestScreen() {
               question.options = [];
             }
           } catch (e) {
-            console.error('Failed to parse options:', e);
+            showAlert('Error', 'Failed to parse question options');
             question.options = [];
           }
         } else if (Array.isArray(question.options)) {
@@ -205,7 +212,7 @@ export default function TakeTestScreen() {
           try {
             question.test_cases = JSON.parse(question.test_cases);
           } catch (e) {
-            console.error('Failed to parse test_cases:', e);
+            showAlert('Error', 'Failed to parse question test cases');
             question.test_cases = [];
           }
         }
@@ -215,7 +222,6 @@ export default function TakeTestScreen() {
 
       setQuestions(parsedQuestions.sort((a: Question, b: Question) => a.order_number - b.order_number));
     } catch (error) {
-      console.error('Error fetching questions:', error);
       showAlert('Error', 'Failed to load questions');
     } finally {
       setLoading(false);
@@ -223,7 +229,6 @@ export default function TakeTestScreen() {
   };
 
   const currentQuestion = questions[currentIndex];
-  console.log('cuurent', currentQuestion)
   const currentAnswer = currentQuestion ? answers.get(currentQuestion.id) : undefined;
 
   // Reset test results when navigating to a different question
@@ -235,6 +240,129 @@ export default function TakeTestScreen() {
       setCodeOutput(''); // Always reset code output when changing questions
     }
   }, [currentQuestion?.id, testResultsMap]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    let interval: number;
+
+    if (timeRemaining !== undefined && timeRemaining > 0 && testStartTime) {
+      interval = setInterval(() => {
+        const elapsed = Math.floor((new Date().getTime() - testStartTime.getTime()) / 1000);
+        const remaining = Math.max(0, testDuration! - elapsed);
+
+        setTimeRemaining(remaining);
+
+        // Auto-submit when time runs out
+        if (remaining === 0 && attemptId && !submitting) {
+          showAlert(
+            'Time\'s Up!',
+            'Your test time has expired. The test will be submitted automatically.',
+            [
+              {
+                text: 'OK',
+                onPress: () => handleSubmitTest()
+              }
+            ]
+          );
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [timeRemaining, testStartTime, testDuration, attemptId, submitting]);
+
+  // App lifecycle monitoring for anti-cheat
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (antiCheatEnabled && attemptId && nextAppState !== 'active') {
+        // App is going to background or becoming inactive
+        showAlert(
+          'Test Violation Detected',
+          'You cannot leave the app during a test. This violation has been recorded.',
+          [
+            {
+              text: 'Return to Test',
+              onPress: () => {
+                // Log the violation
+                // Note: The useAntiCheat hook should handle this, but we can add additional logging here if needed
+              }
+            }
+          ]
+        );
+      }
+    });
+
+    return () => {
+      subscription?.remove();
+    };
+  }, [antiCheatEnabled, attemptId]);
+
+  // Web browser navigation prevention
+  useEffect(() => {
+    if (isWeb && antiCheatEnabled && attemptId) {
+      // Prevent browser back/forward navigation
+      const handlePopState = (event: PopStateEvent) => {
+        event.preventDefault();
+        showAlert(
+          'Navigation Blocked',
+          'You cannot navigate away from the test. This violation has been recorded.',
+          [
+            {
+              text: 'Continue Test',
+              onPress: () => {
+                // Push current state back to prevent navigation
+                window.history.pushState(null, '', window.location.href);
+              }
+            }
+          ]
+        );
+        return false;
+      };
+
+      // Prevent page unload (refresh, close tab, etc.)
+      const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+        event.preventDefault();
+        event.returnValue = 'Are you sure you want to leave? Your test progress will be lost.';
+        return event.returnValue;
+      };
+
+      // Prevent context menu (right-click) to avoid additional navigation options
+      const handleContextMenu = (event: MouseEvent) => {
+        event.preventDefault();
+        return false;
+      };
+
+      // Add event listeners
+      window.addEventListener('popstate', handlePopState);
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener('contextmenu', handleContextMenu);
+
+      // Push initial state to enable popstate detection
+      window.history.pushState(null, '', window.location.href);
+
+      return () => {
+        // Cleanup event listeners
+        window.removeEventListener('popstate', handlePopState);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.removeEventListener('contextmenu', handleContextMenu);
+      };
+    }
+  }, [isWeb, antiCheatEnabled, attemptId]);
+
+  // Cleanup navigation prevention when test is submitted
+  useEffect(() => {
+    if (isWeb && !antiCheatEnabled) {
+      // Remove any remaining event listeners when anti-cheat is disabled
+      const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+        // Allow normal page unload when test is completed
+      };
+
+      // Temporarily allow navigation when test is done
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
+  }, [isWeb, antiCheatEnabled]);
 
   const handleSelectOption = (option: string) => {
     if (!currentQuestion) return;
@@ -352,9 +480,8 @@ export default function TakeTestScreen() {
             total_test_cases: response.data.total_count,
             test_results: response.data.results // Pass individual test case results
           });
-          console.log(`✅ Code answer marked with ${earnedPoints} points (${response.data.passed_count}/${response.data.total_count} test cases passed)`);
         } catch (markError) {
-          console.error('Failed to mark code as correct:', markError);
+          showAlert('Error', 'Failed to mark code as correct');
         }
       }
     } catch (error: any) {
@@ -377,7 +504,7 @@ export default function TakeTestScreen() {
         is_flagged: isFlagged
       });
     } catch (error) {
-      console.error('Failed to save answer:', error);
+      showAlert('Error', 'Failed to save answer');
     }
   };
 
@@ -453,7 +580,7 @@ export default function TakeTestScreen() {
                 try {
                   await document.exitFullscreen();
                 } catch (error) {
-                  console.log('Fullscreen exit error (can be ignored):', error);
+                  showAlert('Error', 'Failed to exit fullscreen mode');
                 }
               }
 
@@ -538,6 +665,17 @@ export default function TakeTestScreen() {
               )}
             </View>
 
+            {/* Timer Display */}
+            {timeRemaining !== undefined && timeRemaining >= 0 && (
+              <View className="flex-row items-center mr-4">
+                <View className={`px-3 py-1 rounded-lg ${timeRemaining <= 300 ? 'bg-red-500' : isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                  <Text className={`text-sm font-mono font-semibold ${timeRemaining <= 300 ? 'text-white' : isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
+                  </Text>
+                </View>
+              </View>
+            )}
+
             <View className="flex-row gap-2">
               <TouchableOpacity
                 onPress={handleToggleFlag}
@@ -580,7 +718,7 @@ export default function TakeTestScreen() {
                   }
                 }
               } catch (error) {
-                console.error('Failed to re-enter fullscreen:', error);
+                showAlert('Error', 'Failed to enter fullscreen mode');
               }
             }}
             className="bg-red-500 px-4 py-3 flex-row items-center justify-between active:bg-red-600"

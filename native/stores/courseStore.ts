@@ -96,7 +96,6 @@ export const useCourseStore = create<CourseState>((set, get) => ({
         lastFetch: now,
       });
     } catch (error: any) {
-      console.error('[CourseStore] Failed to fetch courses:', error);
       const errorMessage = handleApiError(error);
       set({ 
         error: errorMessage.message,

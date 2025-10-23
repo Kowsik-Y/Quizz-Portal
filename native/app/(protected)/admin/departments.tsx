@@ -2,7 +2,6 @@ import { View, ScrollView, TextInput, Pressable, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Trash2, Edit, Building2 } from 'lucide-react-native';
 import api from '@/lib/api';
 
@@ -23,7 +22,6 @@ export default function DepartmentsManagementPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   
-  // Form state
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -40,7 +38,6 @@ export default function DepartmentsManagementPage() {
       const response = await api.get('/departments');
       setDepartments(response.data.departments || response.data);
     } catch (error) {
-      console.error('Failed to fetch departments:', error);
       Alert.alert('Error', 'Failed to load departments');
     } finally {
       setLoading(false);
@@ -55,24 +52,17 @@ export default function DepartmentsManagementPage() {
 
     try {
       if (editingId) {
-        // Update existing department
         await api.put(`/departments/${editingId}`, formData);
         Alert.alert('Success', 'Department updated successfully');
       } else {
-        // Create new department
         await api.post('/departments', formData);
         Alert.alert('Success', 'Department created successfully');
       }
-      
-      // Reset form
       setFormData({ name: '', code: '', description: '' });
       setShowAddForm(false);
       setEditingId(null);
-      
-      // Refresh list
       fetchDepartments();
     } catch (error: any) {
-      console.error('Failed to save department:', error);
       Alert.alert('Error', error.response?.data?.error || 'Failed to save department');
     }
   };
@@ -102,7 +92,6 @@ export default function DepartmentsManagementPage() {
               Alert.alert('Success', 'Department deleted successfully');
               fetchDepartments();
             } catch (error: any) {
-              console.error('Failed to delete department:', error);
               Alert.alert('Error', error.response?.data?.error || 'Failed to delete department');
             }
           }

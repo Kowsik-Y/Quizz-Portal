@@ -12,16 +12,19 @@ export default function CoursesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const isWeb = Platform.OS === 'web';
 
-  const { courses, loading, error, fetchCourses } = useCourseStore();
+  // Select specific store values to avoid recreating fetchCourses on each render
+  const courses = useCourseStore(state => state.courses);
+  const loading = useCourseStore(state => state.loading);
+  const error = useCourseStore(state => state.error);
+  const fetchCourses = useCourseStore(state => state.fetchCourses);
 
   const screenWidth = Dimensions.get('window').width;
   const isLargeScreen = screenWidth > 1024;
   const isMediumScreen = screenWidth > 768;
 
-  // Fetch courses from API
   useEffect(() => {
     fetchCourses();
-  }, []);
+  }, [fetchCourses]);
 
   const filteredCourses = Array.isArray(courses)
     ? courses.filter(course =>
@@ -111,7 +114,7 @@ export default function CoursesPage() {
                 key={course.id}
                 course={course}
                 width={isWeb ? (isLargeScreen ? '32%' : isMediumScreen ? '48.5%' : '100%') : '100%'}
-                variant="default"
+                variant="detailed"
               />
             ))}
           </View>

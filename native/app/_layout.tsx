@@ -22,7 +22,6 @@ import { toastConfig } from '@/lib/toast';
 import { CustomAlertProvider } from '@/components/ui/custom-alert';
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
 

@@ -14,7 +14,6 @@ import {
   ChevronLeft
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -60,7 +59,6 @@ export default function UserDevicesPage() {
       const response = await api.get('/devices');
       setDevices(response.data.devices || []);
     } catch (error) {
-      console.error('Fetch devices error:', error);
       const errorAlertFunc = isWeb ? showAlert : Alert.alert;
       errorAlertFunc('Error', 'Failed to load devices');
     } finally {

@@ -14,7 +14,6 @@ type MaterialType = 'document' | 'video' | 'link' | 'pdf' | 'code' | 'other';
 export default function AddMaterialToTestPage() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const isWeb = Platform.OS === 'web';
   const router = useRouter();
   const { testId } = useLocalSearchParams();
   const user = useAuthStore((state) => state.user);
@@ -90,7 +89,6 @@ export default function AddMaterialToTestPage() {
         },
       ]);
     } catch (error: any) {
-      console.error('Error adding material:', error);
       showAlert(
         'Error',
         error.response?.data?.error || 'Failed to add material. Please try again.'

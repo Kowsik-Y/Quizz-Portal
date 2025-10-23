@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Pressable, Platform, TextInput, Switch } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { userAPI, departmentAPI } from '@/lib/api';
-import { useRouter } from 'expo-router';
-import { Users, Edit2, Trash2, Plus, X, Check, UserX, UserCheck, Save } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Users, Edit2, Trash2, X, Check, UserX, UserCheck, Save } from 'lucide-react-native';
 import { useAlertDialog } from '@/components/AlertDialog';
 import type { User, Department } from '@/lib/types';
 
 export default function ManageUsersScreen() {
   const currentUser = useAuthStore((state) => state.user);
-  const router = useRouter();
   const alertDialog = useAlertDialog();
   const { showAlert } = alertDialog;
   const AlertDialogComponent = alertDialog.AlertDialog;
@@ -57,7 +53,7 @@ export default function ManageUsersScreen() {
       email: user.email,
       name: user.name,
       role: user.role,
-      department_id: user.department_id || null,
+      department_id: user.department?.id ?? null,
       is_active: user.is_active,
       password: ''
     });
@@ -377,7 +373,7 @@ export default function ManageUsersScreen() {
 
                         {/* Department */}
                         <Text className="w-[80px] text-sm text-center text-muted-foreground">
-                          {getDepartmentName(user.department_id)}
+                          {getDepartmentName(user.department?.id)}
                         </Text>
 
                         {/* Status */}
@@ -618,7 +614,7 @@ export default function ManageUsersScreen() {
                       {/* User Details */}
                       <View className="mb-3">
                         <Text className="text-sm text-muted-foreground">
-                          📚 Department: {getDepartmentName(user.department_id)}
+                          Department: {getDepartmentName(user.department?.id)}
                         </Text>
                         <Text className="text-sm text-muted-foreground">
                           {user.is_active ? '✅ Active' : '❌ Inactive'}

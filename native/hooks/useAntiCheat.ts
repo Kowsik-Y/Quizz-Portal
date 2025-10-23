@@ -52,9 +52,9 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
         getViolationMessage(type),
         { title: '⚠️ Violation Detected' }
       );
-    } catch (error) {
-      console.error('Failed to log violation:', error);
-    }
+      } catch (error) {
+        showToast.error('Failed to log violation', { title: 'Error' });
+      }
   };
 
   const getViolationMessage = (type: AntiCheatViolation['type']): string => {
@@ -81,10 +81,9 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
         if (elem.requestFullscreen) {
           await elem.requestFullscreen();
           setIsFullscreen(true);
-          console.log('✅ Entered fullscreen mode');
         }
       } catch (error) {
-        console.log('Could not enter fullscreen:', error);
+        showToast.error('Could not enter fullscreen', { title: 'Error' });
       }
     };
 
@@ -229,7 +228,6 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
     // App State Detection (background/foreground)
     // This also indirectly detects phone calls as they put the app in background
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      console.log(`📱 App state changed: ${lastState} → ${nextAppState}`);
 
       if (nextAppState === 'background' || nextAppState === 'inactive') {
         // App went to background - could be phone call, home button, or other app
@@ -245,7 +243,6 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
         // App returned to foreground
         if (backgroundTime) {
           const duration = Math.round((Date.now() - backgroundTime) / 1000);
-          console.log(`✅ App returned to foreground after ${duration} seconds`);
           backgroundTime = null;
         }
       }
@@ -289,7 +286,6 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
         const ScreenCapture = require('expo-screen-capture');
         
         if (!ScreenCapture) {
-          console.log('⚠️ expo-screen-capture not available');
           return;
         }
 
@@ -297,7 +293,6 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
         
         // Check if functions exist
         if (!preventScreenCaptureAsync || !addScreenshotListener || !allowScreenCaptureAsync) {
-          console.log('⚠️ Screenshot prevention functions not available');
           return;
         }
 
@@ -305,15 +300,13 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
         try {
           await preventScreenCaptureAsync();
           isPreventionEnabled = true;
-          console.log('✅ Screenshot prevention enabled');
         } catch (error) {
-          console.log('⚠️ Could not enable screenshot prevention:', error);
+          showToast.error('Could not enable screenshot prevention', { title: 'Error' });
         }
 
         // Add listener for screenshot attempts (will still detect on iOS even when prevented)
         try {
           screenshotListener = addScreenshotListener(() => {
-            console.log('📸 Screenshot attempt detected');
             logViolation('screenshot', 'Screenshot attempt detected on mobile');
             
             // Show alert on mobile
@@ -323,9 +316,8 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
               [{ text: 'OK' }]
             );
           });
-          console.log('✅ Screenshot listener added');
         } catch (error) {
-          console.log('⚠️ Could not add screenshot listener:', error);
+          showToast.error('Could not add screenshot listener', { title: 'Error' });
         }
 
         // Cleanup function to re-allow screenshots when test ends
@@ -333,22 +325,20 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
           if (screenshotListener) {
             try {
               screenshotListener.remove();
-              console.log('✅ Screenshot listener removed');
             } catch (error) {
-              console.log('⚠️ Error removing screenshot listener:', error);
+              showToast.error('Error removing screenshot listener', { title: 'Error' });
             }
           }
           if (isPreventionEnabled) {
             try {
               await allowScreenCaptureAsync();
-              console.log('✅ Screenshot prevention disabled');
             } catch (error) {
-              console.log('⚠️ Error disabling screenshot prevention:', error);
+              showToast.error('Error disabling screenshot prevention', { title: 'Error' });
             }
           }
         };
       } catch (error) {
-        console.log('⚠️ Screenshot detection setup failed:', error);
+        showToast.error('Screenshot detection setup failed', { title: 'Error' });
         return () => {}; // Return empty cleanup
       }
     };
@@ -357,7 +347,7 @@ export function useAntiCheat({ attemptId, enabled, onViolation }: UseAntiCheatOp
 
     return () => {
       cleanup.then(fn => fn?.()).catch(err => {
-        console.log('⚠️ Screenshot detection cleanup error:', err);
+        showToast.error('Error during screenshot detection cleanup', { title: 'Error' });
       });
     };
   }, [enabled, attemptId]);

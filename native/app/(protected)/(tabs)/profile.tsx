@@ -2,7 +2,6 @@ import { View, ScrollView, Pressable, Platform, Dimensions } from 'react-native'
 import { Text } from '@/components/ui/text';
 import { User, Settings, Award, BookOpen, LogOut, Moon, Sun, Shield, Smartphone } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
 import { useUserStore } from '@/stores/userStore';
 import { useRouter } from 'expo-router';
@@ -201,7 +200,6 @@ export default function ProfilePage() {
             value="Manage logged in devices"
             onPress={() => router.push('/profile/devices')}
           />
-          <MenuItem icon={Settings} title="Preferences" value="Manage your preferences" />
           <Pressable
             onPress={toggleColorScheme}
             className={`rounded-xl p-4 mb-3 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'

@@ -17,7 +17,7 @@ interface Test {
   created_by: number;
   is_active: boolean;
   created_at: string;
-  questions_count?: number;
+  question_count?: number;
 }
 
 interface Booking {
@@ -65,8 +65,10 @@ export const useTestStore = create<TestState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get('/tests');
+      // Backend returns { tests: [...] }
+      const testsData = response.data.tests || response.data;
       set({ 
-        tests: response.data, 
+        tests: testsData, 
         loading: false 
       });
     } catch (error: any) {
@@ -84,8 +86,9 @@ export const useTestStore = create<TestState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get(`/tests/${id}`);
+      const testData = response.data.test || response.data;
       set({ 
-        currentTest: response.data, 
+        currentTest: testData, 
         loading: false 
       });
     } catch (error: any) {
@@ -103,8 +106,10 @@ export const useTestStore = create<TestState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get('/bookings/my-bookings');
+      // Backend returns { bookings: [...] }
+      const bookingsData = response.data.bookings || response.data;
       set({ 
-        bookings: response.data, 
+        bookings: bookingsData, 
         loading: false 
       });
     } catch (error: any) {
@@ -139,15 +144,17 @@ export const useTestStore = create<TestState>((set, get) => ({
     showToast.info('Booking test...');
 
     try {
-      const response = await api.post('/bookings/book-test', {
+      // Backend expects { test_id, booked_slot }
+      const response = await api.post('/bookings', {
         test_id: testId,
-        slot_time: slotTime,
+        booked_slot: slotTime,
       });
 
-      // Replace optimistic booking with real one
+      // Replace optimistic booking with real one (backend returns { booking: ... })
+      const realBooking = response.data.booking || response.data;
       set(state => ({
         bookings: state.bookings.map(b => 
-          b.id === optimisticBooking.id ? response.data : b
+          b.id === optimisticBooking.id ? realBooking : b
         )
       }));
 
@@ -180,7 +187,14 @@ export const useTestStore = create<TestState>((set, get) => ({
     showToast.info('Cancelling booking...');
 
     try {
-      await api.post(`/bookings/${bookingId}/cancel`);
+      // Backend uses PUT for cancel
+      const response = await api.put(`/bookings/${bookingId}/cancel`);
+
+      // Update bookings with returned booking if provided
+      const updatedBooking = response.data.booking || response.data;
+      if (updatedBooking) {
+        set(state => ({ bookings: state.bookings.map(b => b.id === updatedBooking.id ? updatedBooking : b) }));
+      }
 
       showToast.success('Booking cancelled successfully');
       return true;

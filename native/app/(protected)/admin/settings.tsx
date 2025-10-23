@@ -1,20 +1,15 @@
 import { View, ScrollView, Pressable, Platform, TextInput, Switch, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
 import {
-  Settings,
   Mail,
   Bell,
   Shield,
   Globe,
-  Palette,
   Zap,
-  Lock,
-  Server,
   Save,
   RotateCcw
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -77,7 +72,7 @@ export default function SystemSettingsPage() {
         setSettings(response.data.settings);
       }
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      Alert.alert('Error', 'Failed to load settings');
     }
   };
 

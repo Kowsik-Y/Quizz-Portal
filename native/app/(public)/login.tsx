@@ -7,7 +7,6 @@ import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { Input, PasswordInput } from '@/components/ui/input';
 import { Mail, Lock } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCustomAlert } from '@/components/ui/custom-alert';
 
 export default function LoginScreen() {

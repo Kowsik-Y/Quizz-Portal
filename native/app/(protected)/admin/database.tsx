@@ -13,7 +13,6 @@ import {
   FileText
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -50,8 +49,7 @@ export default function DatabaseManagementPage() {
         setDbStats(response.data.stats);
       }
     } catch (error) {
-      console.error('Failed to fetch database stats:', error);
-      // Keep default stats
+      Alert.alert('Error', 'Failed to fetch database statistics');
     }
   };
 

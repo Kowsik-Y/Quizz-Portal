@@ -53,6 +53,15 @@ async function runMigrations() {
     await client.query(migration007);
     console.log('✅ Migration 007 completed\n');
 
+    // Migration 008: Change booked_slot to VARCHAR
+    console.log('📝 Running migration 008: Change booked_slot column to VARCHAR for time slot strings');
+    const migration008 = fs.readFileSync(
+      path.join(__dirname, 'database/migrations/006_change_booked_slot_to_varchar.sql'),
+      'utf8'
+    );
+    await client.query(migration008);
+    console.log('✅ Migration 008 completed\n');
+
     console.log('🎉 All migrations completed successfully!');
     
   } catch (error) {

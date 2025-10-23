@@ -6,7 +6,6 @@ export default function Screen() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const initializing = useAuthStore((state) => state.initializing);
 
-  // Show loading while checking auth (root layout handles checkAuth)
   if (initializing) {
     return (
       <View className="flex-1 items-center justify-center bg-background">

@@ -178,17 +178,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Prevent multiple simultaneous checks
     const state = get();
     if (state._isCheckingAuth) {
-      console.log('⏸️ Auth check already in progress, skipping...');
       return;
     }
 
     // If already initialized and authenticated, skip
     if (!state.initializing && state.isAuthenticated) {
-      console.log('✅ Already authenticated, skipping check');
       return;
     }
 
-    console.log('🔍 Checking authentication...');
     set({ initializing: true, _isCheckingAuth: true });
     
     try {
@@ -206,7 +203,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const response = await api.get('/auth/me');
           const validUser = response.data.user;
 
-          console.log('✅ Auth check successful:', validUser.email);
           set({
             user: validUser,
             token,
@@ -215,7 +211,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             _isCheckingAuth: false,
           });
         } catch (error) {
-          console.log('❌ Token invalid, logging out');
           // Token invalid, clear storage
           await AsyncStorage.removeItem('token');
           await AsyncStorage.removeItem('user');
@@ -228,14 +223,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           });
         }
       } else {
-        console.log('ℹ️ No stored credentials found');
         set({ 
           initializing: false,
           _isCheckingAuth: false,
         });
       }
     } catch (error) {
-      console.error('❌ Auth check error:', error);
       set({ 
         initializing: false,
         _isCheckingAuth: false,

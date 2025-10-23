@@ -1,18 +1,16 @@
 import { View, ScrollView, Pressable, Platform, Dimensions, ActivityIndicator } from 'react-native';
 import { Text } from '@/components/ui/text';
 import {
-  ChevronLeft, ClipboardList, PlusCircle, Edit2, Trash2, Power
+   ClipboardList, PlusCircle, Edit2, Trash2, Power
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useCourseStore } from '@/stores/courseStore';
 import { testAPI, courseAPI } from '@/lib/api';
 import type { Test } from '@/lib/types';
 import { useCustomAlert } from '@/components/ui/custom-alert';
-import HeaderTile from '@/components/ui/headerTile';
 
 export default function CourseDetailsPage() {
   const { colorScheme } = useColorScheme();
@@ -35,23 +33,17 @@ export default function CourseDetailsPage() {
   const isLargeScreen = screenWidth > 1024;
   const isMediumScreen = screenWidth > 768;
 
-
-  // Check if user is teacher or admin
   const isTeacherOrAdmin = user?.role === 'teacher' || user?.role === 'admin';
   const isAdmin = user?.role === 'admin';
 
-  // Fetch course details and tests
   const loadCourseData = async () => {
     if (id) {
-      // Fetch course from store
       await fetchCourseById(Number(id));
 
-      // Fetch tests for this course
       try {
         const testsResponse = await testAPI.getByCourse(Number(id));
         setTests(testsResponse.data.tests || []);
       } catch (err) {
-        console.error('Error loading tests:', err);
         showAlert('Error', 'Failed to load tests. Please try again.');
       }
     }
@@ -61,7 +53,6 @@ export default function CourseDetailsPage() {
     loadCourseData();
   }, [id]);
 
-  // Handle course deletion
   const handleDeleteCourse = () => {
     showAlert(
       'Delete Course',
@@ -86,7 +77,6 @@ export default function CourseDetailsPage() {
                 ]
               );
             } catch (error: any) {
-              console.error('Error deleting course:', error);
               const errorMessage = error.response?.data?.error || 'Failed to delete course';
               showAlert('Error', errorMessage);
             } finally {
@@ -111,7 +101,6 @@ export default function CourseDetailsPage() {
       // Reload course data
       await loadCourseData();
     } catch (error: any) {
-      console.error('Error toggling course status:', error);
       const errorMessage = error.response?.data?.error || 'Failed to update course status';
       showAlert('Error', errorMessage);
     } finally {
@@ -137,7 +126,6 @@ export default function CourseDetailsPage() {
               // Refresh tests list
               await loadCourseData();
             } catch (error: any) {
-              console.error('Error deleting test:', error);
               const errorMessage = error.response?.data?.error || 'Failed to delete test';
               showAlert('Error', errorMessage);
             } finally {
@@ -162,7 +150,6 @@ export default function CourseDetailsPage() {
       // Refresh tests list
       await loadCourseData();
     } catch (error: any) {
-      console.error('Error toggling test status:', error);
       const errorMessage = error.response?.data?.error || 'Failed to update test status';
       showAlert('Error', errorMessage);
     } finally {

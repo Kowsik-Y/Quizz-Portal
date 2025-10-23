@@ -79,8 +79,6 @@ export const useUserStore = create<UserState>((set, get) => ({
         error: errorMessage.message,
         loading: false,
       });
-      // Don't show toast for stats fetch failures
-      console.error('Failed to fetch stats:', errorMessage.message);
     }
   },
 
@@ -99,7 +97,6 @@ export const useUserStore = create<UserState>((set, get) => ({
         error: errorMessage.message,
         loading: false,
       });
-      console.error('Failed to fetch achievements:', errorMessage.message);
     }
   },
 
@@ -118,7 +115,6 @@ export const useUserStore = create<UserState>((set, get) => ({
         error: errorMessage.message,
         loading: false,
       });
-      console.error('Failed to fetch progress:', errorMessage.message);
     }
   },
 
@@ -137,7 +133,6 @@ export const useUserStore = create<UserState>((set, get) => ({
         error: errorMessage.message,
         loading: false,
       });
-      console.error('Failed to fetch recent activity:', errorMessage.message);
     }
   },
 

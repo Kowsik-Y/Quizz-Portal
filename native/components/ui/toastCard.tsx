@@ -26,9 +26,8 @@ const variant = {
 };
 const ToastCard = ({ text1, text2, type, props }: { text1: string, text2: string, type: 'success' | 'error' | 'info' | 'warning', props?: any }) => {
     const variantStyle = variant[type];
-    console.log(variantStyle);
     return (
-        <View pointerEvents="none" style={{ position: 'absolute', top: 10, right: 10, alignItems: 'flex-end', width: '100%', zIndex: 9999 }}>
+        <View pointerEvents="none" className="right-0 sm:right-3" style={{ position: 'absolute', top: 10, alignItems: 'flex-end', width: '100%', zIndex: 9999 }}>
             <View className={`w-full max-w-full sm:max-w-md rounded-sm bg-background`}>
                 <View className={`${variantStyle.background} flex-row items-center gap-4 flex-1 px-4 py-3 justify-between border-[1px] rounded-sm  shadow-sm`}>
                     <View className="flex-row items-center gap-4">

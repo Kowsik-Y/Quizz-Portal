@@ -1,6 +1,3 @@
-// Tests Module Layout
-// Handles all test-related pages and navigation
-
 import HeaderTile from '@/components/ui/headerTile';
 import { Stack } from 'expo-router';
 
@@ -47,14 +44,6 @@ export default function TestsLayout() {
         options={{
           headerShown: false,
           gestureEnabled: false,
-        }}
-      />
-      <Stack.Screen
-        name="take-quiz"
-        options={{
-          title: 'Practice Quiz',
-          headerShown: false,
-          gestureEnabled: false
         }}
       />
       <Stack.Screen

@@ -53,12 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await authAPI.login({ email, password });
       const { user: newUser } = response.data;
-      
-      // Cookie is automatically set by the backend
-      // No need to store in AsyncStorage
       setUser(newUser);
     } catch (error: any) {
-      console.error('Login error:', error);
       throw error;
     }
   };
@@ -68,10 +64,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await authAPI.register(data);
       const { user: newUser } = response.data;
 
-      // Cookie is automatically set by the backend
       setUser(newUser);
     } catch (error: any) {
-      console.error('Register error:', error);
       throw error;
     }
   };

@@ -1,18 +1,16 @@
-import { View, ScrollView, Pressable, Platform, Dimensions, ActivityIndicator } from 'react-native';
+import { View, ScrollView, Pressable, Platform, Dimensions, ActivityIndicator, Linking } from 'react-native';
 import { Text } from '@/components/ui/text';
 import {
-  BookOpen, Calendar, Clock, Download, Video, FileText,
-  Users, ChevronLeft, ExternalLink, Plus, PlayCircle,
+  Calendar, Clock, Download, Video, FileText, ExternalLink, Plus, PlayCircle,
   FileCode, File, PlusCircle, Edit, List, Trash2, Activity,
   AlertTriangle, Shield, ChevronRight
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useTestStore } from '@/stores/testStore';
-import { testAPI, materialAPI, attemptAPI } from '@/lib/api';
+import { testAPI, materialAPI, attemptAPI, bookingAPI } from '@/lib/api';
 import type { CourseMaterial, Test } from '@/lib/types';
 import { Picker } from '@react-native-picker/picker';
 import { EditTestTitleModal } from '@/components/EditTestTitleModal';
@@ -28,7 +26,6 @@ export default function TestDetailsPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const user = useAuthStore((state) => state.user);
-  const { fetchTestById } = useTestStore();
   const { showAlert } = useCustomAlert();
 
   // State for dynamic data
@@ -42,6 +39,9 @@ export default function TestDetailsPage() {
   const [activeTab, setActiveTab] = useState<'materials' | 'attempts' | 'reports'>('materials');
   const [studentAttempts, setStudentAttempts] = useState<any[]>([]);
   const [maxAttemptsReached, setMaxAttemptsReached] = useState(false);
+  const [bookedSlot, setBookedSlot] = useState<string | null>(null);
+  const [booking, setBooking] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const screenWidth = Dimensions.get('window').width;
   const isLargeScreen = screenWidth > 1024;
@@ -63,20 +63,16 @@ export default function TestDetailsPage() {
         const testResponse = await testAPI.getById(Number(id));
         setTest(testResponse.data.test);
 
-        // Debug: Check test_type value
-        console.log('📊 Test Type:', testResponse.data.test?.test_type);
-        console.log('📊 Test Type (lowercase):', testResponse.data.test?.test_type?.toLowerCase());
-
         // Fetch materials for this test (don't fail the whole load if this fails)
         try {
           const materialsResponse = await materialAPI.getByTest(Number(id));
           setMaterials(materialsResponse.data.materials || []);
         } catch (materialsError) {
-          console.log('Could not load materials:', materialsError);
+          showAlert('Error', 'Failed to load materials for this test');
           setMaterials([]); // Set empty array so UI can still render
         }
 
-        // If student, check their attempts
+        // If student, check their attempts and booking
         if (!isTeacherOrAdmin && user?.id) {
           try {
             const attemptsResponse = await attemptAPI.getStudentAttempts(user.id, Number(id));
@@ -89,13 +85,26 @@ export default function TestDetailsPage() {
               const completedAttempts = attempts.filter((a: any) => a.status === 'submitted').length;
               setMaxAttemptsReached(completedAttempts >= testData.max_attempts);
             }
+
+            // Check for existing booking
+            try {
+              const bookingsResponse = await bookingAPI.getMyBookings();
+              const userBookings = bookingsResponse.data.bookings || [];
+              const testBooking = userBookings.find((b: any) => b.test_id === Number(id) && b.status === 'booked');
+              if (testBooking) {
+                setBookedSlot(testBooking.booked_slot);
+              } else {
+                setBookedSlot(null);
+              }
+            } catch (bookingError) {
+              setBookedSlot(null);
+            }
           } catch (err) {
-            console.log('Could not load student attempts:', err);
+            showAlert('Error', 'Could not load student attempts');
           }
         }
       }
     } catch (err) {
-      console.error('Error loading test data:', err);
       setError('Failed to load test data');
       showAlert('Error', 'Failed to load test details. Please try again.');
     } finally {
@@ -107,6 +116,15 @@ export default function TestDetailsPage() {
     loadTestData();
   }, [id]);
 
+  // Update current time every minute to trigger re-renders for slot availability
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Handle title update
   const handleUpdateTitle = async (newTitle: string) => {
     try {
@@ -116,7 +134,6 @@ export default function TestDetailsPage() {
       setShowEditTitleModal(false);
       loadTestData(); // Reload test data
     } catch (error: any) {
-      console.error('Error updating test title:', error);
       const errorMessage = error.response?.data?.error || 'Failed to update test title';
       showAlert('Error', errorMessage);
     } finally {
@@ -149,7 +166,6 @@ export default function TestDetailsPage() {
                 ]
               );
             } catch (error: any) {
-              console.error('Error deleting test:', error);
               const errorMessage = error.response?.data?.error || 'Failed to delete test';
               showAlert('Error', errorMessage);
             } finally {
@@ -159,6 +175,24 @@ export default function TestDetailsPage() {
         }
       ]
     );
+  };
+
+  // Handle booking slot
+  const handleBookSlot = async () => {
+    try {
+      setBooking(true);
+      await bookingAPI.create({
+        test_id: Number(id),
+        booked_slot: selectedSlot
+      });
+      setBookedSlot(selectedSlot);
+      showAlert('Success', `Slot booked successfully: ${selectedSlot}`);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Failed to book slot';
+      showAlert('Error', errorMessage);
+    } finally {
+      setBooking(false);
+    }
   };
 
   // Helper function to get relative time
@@ -173,6 +207,32 @@ export default function TestDetailsPage() {
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     return date.toLocaleDateString();
+  };
+
+  // Helper function to check if current time is within booked slot
+  const isWithinBookedSlot = (slot: string): boolean => {
+    const now = currentTime;
+    const [startStr, endStr] = slot.split(' - ');
+    
+    // Parse start time
+    const startParts = startStr.split(' ');
+    const startTime = startParts[0]; // "10:00"
+    const startPeriod = startParts[1]; // "AM" or "PM"
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const startHour24 = startPeriod === 'PM' && startHour !== 12 ? startHour + 12 : startPeriod === 'AM' && startHour === 12 ? 0 : startHour;
+    
+    // Parse end time
+    const endParts = endStr.split(' ');
+    const endTime = endParts[0];
+    const endPeriod = endParts[1];
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+    const endHour24 = endPeriod === 'PM' && endHour !== 12 ? endHour + 12 : endPeriod === 'AM' && endHour === 12 ? 0 : endHour;
+    
+    // Create Date objects for today
+    const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHour24, startMinute);
+    const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour24, endMinute);
+    
+    return now >= startDate && now <= endDate;
   };
 
   const MaterialCard = ({ material }: { material: CourseMaterial }) => {
@@ -208,15 +268,39 @@ export default function TestDetailsPage() {
       }
     };
 
-    const handleOpenMaterial = () => {
+    const handleOpenMaterial = async () => {
       if (material.file_url) {
-        showAlert('Open Material', `Opening: ${material.title}`);
+        try {
+          const supported = await Linking.canOpenURL(material.file_url);
+          if (supported) {
+            await Linking.openURL(material.file_url);
+          } else {
+            showAlert('Error', 'Cannot open this material. The URL may be invalid.');
+          }
+        } catch (error) {
+          showAlert('Error', 'Failed to open material');
+        }
+      } else if (material.content) {
+        // If there's inline content, show it in an alert for now
+        showAlert(material.title, material.content);
+      } else {
+        showAlert('Not Available', 'This material has no content to view');
       }
     };
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
       if (material.file_url) {
-        showAlert('Download', `Downloading: ${material.title}`);
+        try {
+          const supported = await Linking.canOpenURL(material.file_url);
+          if (supported) {
+            await Linking.openURL(material.file_url);
+            showAlert('Download Started', `Opening ${material.title} for download`);
+          } else {
+            showAlert('Error', 'Cannot download this material. The URL may be invalid.');
+          }
+        } catch (error) {
+          showAlert('Error', 'Failed to download material');
+        }
       } else {
         showAlert('Not Available', 'This material cannot be downloaded');
       }
@@ -565,11 +649,7 @@ export default function TestDetailsPage() {
                       {/* Instant Test - Always Available (default if no test_type specified) */}
                       {(() => {
                         const testType = test?.test_type?.toLowerCase();
-                        console.log('🎯 Checking Instant Test:', {
-                          original: test?.test_type,
-                          lowercase: testType,
-                          willShow: (!testType || testType === 'instant')
-                        });
+                        
                         return (!testType || testType === 'instant') && (
                           <Pressable
                             onPress={() => router.push(`/tests/take-test?id=${id}`)}
@@ -586,11 +666,6 @@ export default function TestDetailsPage() {
                       {/* Timed Test - Check if within time window */}
                       {(() => {
                         const testType = test?.test_type?.toLowerCase();
-                        console.log('⏰ Checking Timed Test:', {
-                          original: test?.test_type,
-                          lowercase: testType,
-                          willShow: testType === 'timed'
-                        });
                         if (testType !== 'timed') return null;
 
                         return (
@@ -666,60 +741,94 @@ export default function TestDetailsPage() {
                       {/* Booking Test - Show Book Slot Option */}
                       {(() => {
                         const testType = test?.test_type?.toLowerCase();
-                        console.log('📅 Checking Booking Test:', {
-                          original: test?.test_type,
-                          lowercase: testType,
-                          willShow: testType === 'booking'
-                        });
                         if (testType !== 'booking') return null;
 
                         return (
                           <View className="gap-3">
-                            {/* Book Slot Section */}
-                            <View className={`rounded-lg p-4 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-                              <Text className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Select Time Slot
-                              </Text>
-                              <View className={`rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'}`}>
-                                <Picker
-                                  selectedValue={selectedSlot}
-                                  onValueChange={(value) => setSelectedSlot(value)}
-                                  style={{
-                                    color: isDark ? '#fff' : '#000',
-                                    backgroundColor: 'transparent'
-                                  }}
-                                >
-                                  <Picker.Item label="10:00 AM - 11:00 AM" value="10:00 AM - 11:00 AM" />
-                                  <Picker.Item label="11:00 AM - 12:00 PM" value="11:00 AM - 12:00 PM" />
-                                  <Picker.Item label="02:00 PM - 03:00 PM" value="02:00 PM - 03:00 PM" />
-                                  <Picker.Item label="03:00 PM - 04:00 PM" value="03:00 PM - 04:00 PM" />
-                                </Picker>
+                            {/* Show booked slot if exists */}
+                            {bookedSlot && (
+                              <View className={`rounded-lg p-4 ${isDark ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-200'}`}>
+                                <View className="flex-row items-center justify-center mb-2">
+                                  <Calendar size={20} color={isDark ? '#86efac' : '#16a34a'} />
+                                  <Text className={`ml-2 font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>
+                                    Slot Booked: {bookedSlot}
+                                  </Text>
+                                </View>
+                                <Text className={`text-center text-sm ${isDark ? 'text-green-300' : 'text-green-600'}`}>
+                                  You can take the test during this time slot
+                                </Text>
                               </View>
-                            </View>
+                            )}
 
-                            {/* Book Slot Button */}
-                            <Pressable
-                              onPress={() => {
-                                showAlert('Success', `Slot booked: ${selectedSlot}`);
-                              }}
-                              className="bg-blue-500 rounded-lg py-4 flex-row items-center justify-center"
-                            >
-                              <Calendar size={20} color="white" />
-                              <Text className="text-white font-bold text-center ml-2 text-lg">
-                                Book Slot
-                              </Text>
-                            </Pressable>
+                            {/* Book Slot Section - Only show if not booked */}
+                            {!bookedSlot && (
+                              <View className={`rounded-lg p-4 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                                <Text className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                  Select Time Slot
+                                </Text>
+                                <View className={`rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'}`}>
+                                  <Picker
+                                    selectedValue={selectedSlot}
+                                    onValueChange={(value) => setSelectedSlot(value)}
+                                    style={{
+                                      color: isDark ? '#fff' : '#000',
+                                      backgroundColor: 'transparent'
+                                    }}
+                                  >
+                                    <Picker.Item label="10:00 AM - 11:00 AM" value="10:00 AM - 11:00 AM" />
+                                    <Picker.Item label="11:00 AM - 12:00 PM" value="11:00 AM - 12:00 PM" />
+                                    <Picker.Item label="02:00 PM - 03:00 PM" value="02:00 PM - 03:00 PM" />
+                                    <Picker.Item label="03:00 PM - 04:00 PM" value="03:00 PM - 04:00 PM" />
+                                  </Picker>
+                                </View>
+                              </View>
+                            )}
 
-                            {/* Take Test Button (if slot is booked) */}
-                            <Pressable
-                              onPress={() => router.push(`/tests/take-test?id=${id}`)}
-                              className="bg-green-500 rounded-lg py-4 flex-row items-center justify-center"
-                            >
-                              <PlayCircle size={20} color="white" />
-                              <Text className="text-white font-bold text-center ml-2 text-lg">
-                                Take Test
-                              </Text>
-                            </Pressable>
+                            {/* Book Slot Button - Only show if not booked */}
+                            {!bookedSlot && (
+                              <Pressable
+                                onPress={handleBookSlot}
+                                disabled={booking}
+                                className={`rounded-lg py-4 flex-row items-center justify-center ${booking ? 'bg-gray-500' : 'bg-blue-500'}`}
+                              >
+                                {booking ? (
+                                  <ActivityIndicator size="small" color="white" />
+                                ) : (
+                                  <Calendar size={20} color="white" />
+                                )}
+                                <Text className="text-white font-bold text-center ml-2 text-lg">
+                                  {booking ? 'Booking...' : 'Book Slot'}
+                                </Text>
+                              </Pressable>
+                            )}
+
+                            {/* Take Test Button - Show if slot is booked and within time */}
+                            {bookedSlot && isWithinBookedSlot(bookedSlot) && (
+                              <Pressable
+                                onPress={() => router.push(`/tests/take-test?id=${id}`)}
+                                className="bg-green-500 rounded-lg py-4 flex-row items-center justify-center"
+                              >
+                                <PlayCircle size={20} color="white" />
+                                <Text className="text-white font-bold text-center ml-2 text-lg">
+                                  Take Test Now
+                                </Text>
+                              </Pressable>
+                            )}
+
+                            {/* Waiting message - Show if slot is booked but not within time */}
+                            {bookedSlot && !isWithinBookedSlot(bookedSlot) && (
+                              <View className={`rounded-lg py-4 px-4 ${isDark ? 'bg-yellow-900/30 border border-yellow-700' : 'bg-yellow-50 border border-yellow-200'}`}>
+                                <View className="flex-row items-center justify-center mb-2">
+                                  <Clock size={20} color={isDark ? '#fbbf24' : '#f59e0b'} />
+                                  <Text className={`ml-2 font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                                    Waiting for Test Time
+                                  </Text>
+                                </View>
+                                <Text className={`text-center text-sm ${isDark ? 'text-yellow-300' : 'text-yellow-600'}`}>
+                                  Test available during: {bookedSlot}
+                                </Text>
+                              </View>
+                            )}
                           </View>
                         );
                       })()}

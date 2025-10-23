@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import { User, Mail, Lock, Shield, Users, GraduationCap, Hash, Building } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useCustomAlert } from '@/components/ui/custom-alert';
 
@@ -58,11 +57,6 @@ export default function CreateUserScreen() {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // await userAPI.create(formData);
-
-      console.log('Creating user:', formData);
-
       showAlert(
         'Success',
         `User ${formData.name} created successfully!`,

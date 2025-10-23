@@ -111,7 +111,7 @@ export function useCustomAlert() {
 // Utility function to mimic Alert.alert API
 export const CustomAlert = {
   alert: (title: string, message?: string, buttons?: AlertButton[]) => {
-    // This is a placeholder - the actual implementation will use the hook
-    console.warn('CustomAlert.alert called outside of CustomAlertProvider context');
+    const { showAlert } = useCustomAlert();
+    showAlert(title, message, buttons);
   },
 };

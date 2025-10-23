@@ -6,7 +6,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { courseAPI, departmentAPI } from '@/lib/api';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BookOpen, Save } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Department } from '@/lib/types';
 import { useCustomAlert } from '@/components/ui/custom-alert';
 
@@ -67,7 +66,6 @@ export default function EditCourseScreen() {
       const dept = depts.find((d: Department) => d.id === course.department_id);
       setSelectedDept(dept || null);
     } catch (error) {
-      console.error('Failed to load data:', error);
       showAlert('Error', 'Failed to load course data');
     } finally {
       setInitialLoading(false);

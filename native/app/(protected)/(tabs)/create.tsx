@@ -11,7 +11,6 @@ export default function CreatePage() {
   const router = useRouter();
   const isDark = colorScheme === 'dark';
   const isWeb = Platform.OS === 'web';
-  const isAdmin = user?.role === 'admin';
 
   const createOptions = [
     {
@@ -23,19 +22,11 @@ export default function CreatePage() {
       roles: ['teacher', 'admin']
     },
     {
-      title: 'Create Test',
-      description: 'Design a quiz or exam for your students',
-      icon: FileText,
-      color: '#10b981',
-      route: '/tests/create-test',
-      roles: ['teacher', 'admin']
-    },
-    {
-      title: 'Manage Users',
-      description: 'Create and manage user accounts',
+      title: 'Admin Management',
+      description: 'Manage users and their roles in the system',
       icon: Users,
       color: '#8b5cf6',
-      route: '/admin/manage-users',
+      route: '/admin',
       roles: ['admin']
     },
   ];
@@ -126,29 +117,6 @@ export default function CreatePage() {
             </View>
           )}
         </View>
-
-        {/* Info Card */}
-        <View
-          className={`rounded-xl p-6 mt-6 ${isDark ? 'bg-blue-900/20 border border-blue-800' : 'bg-blue-50 border border-blue-200'
-            }`}
-        >
-          <View className="flex-row items-start">
-            <View className="mr-3">
-              <Text className="text-2xl">💡</Text>
-            </View>
-            <View className="flex-1">
-              <Text className={`font-semibold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>
-                Quick Tips
-              </Text>
-              <Text className={`text-sm ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
-                • Create courses first, then add tests to them{'\n'}
-                • Tests can have multiple question types{'\n'}
-                • {isAdmin ? 'As admin, you can manage all users' : 'Share courses with your students'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
         <View className="h-8" />
       </ScrollView>
     </View>

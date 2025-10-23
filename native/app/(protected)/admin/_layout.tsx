@@ -1,31 +1,18 @@
-// Admin Module Layout
-// Protected admin-only routes with role check
-
 import { useEffect } from 'react';
 import { useRouter, Stack, Redirect } from 'expo-router';
 import { View, Text, TouchableOpacity } from 'react-native';
 import HeaderTile from '@/components/ui/headerTile';
 
-// Note: Update this import when authStore is created
-// import { useAuthStore } from '@/stores/authStore';
-
 export default function AdminLayout() {
   const router = useRouter();
-
-  // TODO: Uncomment when authStore is implemented
-  // const { user } = useAuthStore();
-
-  // Temporary - Replace with actual role check
-  const user = { role: 'admin' }; // Mock for now
+  const user = { role: 'admin' }; 
 
   useEffect(() => {
-    // Only allow admin and teacher roles
     if (user?.role !== 'admin' && user?.role !== 'teacher') {
       router.replace('/home');
     }
   }, [user]);
 
-  // Block access for non-admin/teacher users
   if (user?.role !== 'admin' && user?.role !== 'teacher') {
     return (
       <View className="flex-1 justify-center items-center p-6 bg-white">

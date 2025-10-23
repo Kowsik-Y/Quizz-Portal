@@ -6,12 +6,9 @@ import { useAuthStore } from '@/stores/authStore';
 import { courseAPI, departmentAPI } from '@/lib/api';
 import { useRouter } from 'expo-router';
 import { BookOpen, Save } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Department } from '@/lib/types';
 import { useCustomAlert } from '@/components/ui/custom-alert';
 import api from '@/lib/api';
-import HeaderTile from '@/components/ui/headerTile';
-
 interface AcademicYear {
   id: number;
   year: string;
@@ -50,9 +47,8 @@ export default function EnhancedCreateCourseScreen() {
     try {
       const response = await departmentAPI.getAll();
       setDepartments(response.data.departments || []);
-      // Don't auto-select first department - let user choose or select "All"
     } catch (error) {
-      console.error('Failed to load departments:', error);
+      showAlert('Error', 'Failed to load departments');
     }
   };
 
@@ -61,7 +57,6 @@ export default function EnhancedCreateCourseScreen() {
       const response = await api.get('/academic-years');
       const years = response.data.academicYears || [];
       setAcademicYears(years);
-      // Select active year by default
       const activeYear = years.find((y: AcademicYear) => y.is_active);
       if (activeYear) {
         setSelectedYear(activeYear);
@@ -69,7 +64,7 @@ export default function EnhancedCreateCourseScreen() {
         setSelectedYear(years[0]);
       }
     } catch (error) {
-      console.error('Failed to load academic years:', error);
+      showAlert('Error', 'Failed to load academic years');
     }
   };
 
@@ -86,7 +81,7 @@ export default function EnhancedCreateCourseScreen() {
         ...courseData,
         department_id: selectedDept?.id,
         year_id: selectedYear?.id
-      });
+      } as any);
 
       const courseId = courseResponse.data.course.id;
 
