@@ -195,35 +195,41 @@ export function CodeEditor({
 
   const handleTextChange = (text: string) => {
     // Auto-close brackets, braces, parentheses, and quotes
-    const lastChar = text[text.length - 1];
     const prevText = value;
-    
-    // Check if user just typed an opening character
+    const closingPairs: Record<string, string> = {
+      '{': '}',
+      '[': ']',
+      '(': ')',
+      '"': '"',
+      "'": "'",
+      '`': '`'
+    };
+
+    // If text length increased, find the change position and inserted text
     if (text.length > prevText.length) {
-      const insertedChar = text[text.length - 1];
-      const closingPairs: Record<string, string> = {
-        '{': '}',
-        '[': ']',
-        '(': ')',
-        '"': '"',
-        "'": "'",
-        '`': '`'
-      };
-      
-      if (closingPairs[insertedChar]) {
-        // Insert the closing character
-        const beforeCursor = text;
-        const closingChar = closingPairs[insertedChar];
-        onChange(beforeCursor + closingChar);
-        
-        // Move cursor between the pair (this will be handled by selection)
-        setTimeout(() => {
-          setCursorPosition(text.length);
-        }, 0);
+      // find first index where they differ
+      let idx = 0;
+      const minLen = Math.min(prevText.length, text.length);
+      while (idx < minLen && prevText[idx] === text[idx]) idx++;
+
+      // inserted segment
+      const inserted = text.slice(idx, idx + (text.length - prevText.length));
+
+      // If the inserted segment is a single opening char we auto-close
+      if (inserted.length === 1 && closingPairs[inserted]) {
+        const closingChar = closingPairs[inserted];
+        // build new value by inserting closingChar right after the inserted char
+        const newValue = text.slice(0, idx + 1) + closingChar + text.slice(idx + 1);
+        onChange(newValue);
+
+        // place caret between the pair
+        const newCursor = idx + 1;
+        // update state and also force selection on the TextInput (below)
+        setTimeout(() => setCursorPosition(newCursor), 0);
         return;
       }
     }
-    
+
     onChange(text);
   };
 
@@ -260,6 +266,9 @@ export function CodeEditor({
     const newText = newTextBefore + suggestion + textAfterCursor;
     
     onChange(newText);
+    // move cursor to the end of the inserted suggestion
+    const newCursorPos = newTextBefore.length + suggestion.length;
+    setTimeout(() => setCursorPosition(newCursorPos), 0);
     setAutocompleteOptions([]);
   };
 
@@ -469,6 +478,8 @@ export function CodeEditor({
               multiline
               editable={!readOnly}
               scrollEnabled={false}
+              // keep the caret in the correct position for controlled input
+              selection={{ start: cursorPosition, end: cursorPosition }}
               style={{
                 color: 'transparent',
                 fontFamily: getMonospaceFont(),
