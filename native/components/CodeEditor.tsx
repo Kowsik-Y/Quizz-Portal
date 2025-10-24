@@ -422,7 +422,6 @@ export function CodeEditor({
                 fontSize: 13, 
                 fontFamily: getMonospaceFont(),
                 lineHeight: 20,
-                textAlign: 'right',
                 height: 20
               }}>
                 {num}
