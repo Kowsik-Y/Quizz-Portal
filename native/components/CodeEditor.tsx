@@ -194,7 +194,9 @@ export function CodeEditor({
   }, [value, cursorPosition, language, showAutocomplete]);
 
   const handleTextChange = (text: string) => {
-    // Auto-close brackets, braces, parentheses, and quotes
+    // Use the previous cursor position to determine where the user inserted text.
+    // This is more reliable than a left-to-right string diff and avoids
+    // 'mirrored' characters appearing around the caret when editing in the middle.
     const prevText = value;
     const closingPairs: Record<string, string> = {
       '{': '}',
@@ -205,31 +207,28 @@ export function CodeEditor({
       '`': '`'
     };
 
-    // If text length increased, find the change position and inserted text
-    if (text.length > prevText.length) {
-      // find first index where they differ
-      let idx = 0;
-      const minLen = Math.min(prevText.length, text.length);
-      while (idx < minLen && prevText[idx] === text[idx]) idx++;
+    const delta = text.length - prevText.length;
 
-      // inserted segment
-      const inserted = text.slice(idx, idx + (text.length - prevText.length));
+    // Insertion case (typing or single-char paste)
+    if (delta > 0) {
+      // assume insertion occurred at the previous cursor position
+      const insertStart = cursorPosition;
+      const inserted = text.slice(insertStart, insertStart + delta);
 
-      // If the inserted segment is a single opening char we auto-close
+      // If the user typed a single opening char, auto-close it at the insertion point
       if (inserted.length === 1 && closingPairs[inserted]) {
         const closingChar = closingPairs[inserted];
-        // build new value by inserting closingChar right after the inserted char
-        const newValue = text.slice(0, idx + 1) + closingChar + text.slice(idx + 1);
+        const newValue = prevText.slice(0, insertStart) + inserted + closingChar + prevText.slice(insertStart);
         onChange(newValue);
 
         // place caret between the pair
-        const newCursor = idx + 1;
-        // update state and also force selection on the TextInput (below)
-        setTimeout(() => setCursorPosition(newCursor), 0);
+        const newCursor = insertStart + 1;
+        setCursorPosition(newCursor);
         return;
       }
     }
 
+    // Deletion or replacement or paste of multiple characters: just propagate value
     onChange(text);
   };
 
