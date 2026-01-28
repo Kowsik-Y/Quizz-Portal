@@ -22,7 +22,6 @@ interface Course {
   created_at: string;
   materials_count?: number;
 }
-
 interface Material {
   id: number;
   course_id: number;
