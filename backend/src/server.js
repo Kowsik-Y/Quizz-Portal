@@ -76,28 +76,6 @@ app.use(compression()); // Enable gzip compression
 app.use(limiter); // Apply rate limiting
 app.use(
 	cors({
-		origin: (origin, callback) => {
-			// Allow requests with no origin (like mobile apps or Postman)
-			if (!origin) return callback(null, true);
-
-			// List of allowed origins
-			const allowedOrigins = [
-				"http://localhost:8081",
-				"http://192.168.1.1:8081",
-				"http://127.0.0.1:8081",
-				process.env.FRONTEND_URL,
-			].filter(Boolean);
-
-			if (
-				allowedOrigins.indexOf(origin) !== -1 ||
-				origin.startsWith("http://localhost") ||
-				origin.startsWith("http://192.168")
-			) {
-				callback(null, true);
-			} else {
-				callback(null, true); // Allow all in development
-			}
-		},
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -322,3 +300,4 @@ process.on("SIGINT", () => {
 });
 
 module.exports = app;
+
