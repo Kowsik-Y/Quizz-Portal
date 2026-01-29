@@ -1,5 +1,6 @@
 import { View, ScrollView, Pressable, Platform, TextInput, ActivityIndicator } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 import { Link as LinkIcon, FileText, Video, FileCode, Save } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useState } from 'react';
@@ -42,12 +43,13 @@ export default function AddMaterialToTestPage() {
           <Text className={`mt-2 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             Only teachers and admins can add materials.
           </Text>
-          <Pressable
+          <Button
             onPress={() => router.back()}
-            className="mt-6 px-6 py-3 bg-blue-500 rounded-lg"
+            variant="secondary"
+            className="mt-6"
           >
-            <Text className="text-white font-semibold">Go Back</Text>
-          </Pressable>
+            <Text className="font-semibold">Go Back</Text>
+          </Button>
         </View>
       </View>
     );
@@ -221,21 +223,22 @@ export default function AddMaterialToTestPage() {
         </View>
 
         {/* Submit Button */}
-        <Pressable
+        <Button
           onPress={handleSubmit}
           disabled={loading}
-          className={`py-4 rounded-lg flex-row items-center justify-center mb-6 ${loading ? 'bg-gray-400' : 'bg-blue-500'
-            }`}
+          className="mb-6"
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Save size={20} color="#fff" />
-              <Text className="text-white font-bold text-lg ml-2">Add Material</Text>
-            </>
-          )}
-        </Pressable>
+          <View className="flex-row items-center">
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Save size={20} color="#fff" />
+                <Text className="text-white font-bold text-lg ml-2">Add Material</Text>
+              </>
+            )}
+          </View>
+        </Button>
       </ScrollView>
     </View>
   );

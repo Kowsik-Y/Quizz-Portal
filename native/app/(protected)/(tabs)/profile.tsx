@@ -1,30 +1,65 @@
-import { View, ScrollView, Pressable, Platform, Dimensions } from 'react-native';
+import { View, ScrollView, Pressable, Platform, Dimensions, RefreshControl, Animated } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { User, Settings, Award, BookOpen, LogOut, Moon, Sun, Shield, Smartphone } from 'lucide-react-native';
+import { Award, BookOpen, LogOut, Moon, Sun, Shield, Smartphone, Bell, Lock, HelpCircle, Mail } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '@/stores/authStore';
 import { useUserStore } from '@/stores/userStore';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useCustomAlert } from '@/components/ui/custom-alert';
+import { ProfileStatCard, ProfileMenuItem, ProfileHeader } from '@/components';
+import AdminCard from '@/components/AdminCard';
 
 export default function ProfilePage() {
-  const { colorScheme, toggleColorScheme } = useColorScheme();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const { stats, fetchStats } = useUserStore();
+  const { stats, fetchStats, loading } = useUserStore();
   const router = useRouter();
-  const isDark = colorScheme === 'dark';
+  const { colorScheme, setColorScheme } = useColorScheme();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const [themeTransitioning, setThemeTransitioning] = useState(false);
+
+
+  const handleToggleTheme = async () => {
+    try {
+      setThemeTransitioning(true);
+
+      // Calculate the new theme
+      const newTheme = colorScheme === "light" ? "dark" : "light";
+
+      // Set the theme immediately (this triggers re-render)
+      setColorScheme(newTheme);
+
+      // Save to AsyncStorage
+      await AsyncStorage.setItem('theme', newTheme);
+
+      setTimeout(() => setThemeTransitioning(false), 300);
+    } catch (error) {
+      console.error('Failed to save theme:', error);
+      setThemeTransitioning(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    if (user?.role === 'student') {
+      await fetchStats();
+    }
+    setRefreshing(false);
+  };
+
 
   // Fetch user stats on mount
   useEffect(() => {
     if (user?.role === 'student') {
       fetchStats();
     }
-  }, [user]);
+  }, [user, fetchStats]);
   const isWeb = Platform.OS === 'web';
   const screenWidth = Dimensions.get('window').width;
-  const isLargeScreen = screenWidth >= 768;
+  const isLargeScreen = screenWidth >= 1024;
   const { showAlert } = useCustomAlert();
 
 
@@ -51,178 +86,154 @@ export default function ProfilePage() {
     );
   };
 
-  const MenuItem = ({ icon: Icon, title, value, onPress }: any) => (
-    <Pressable
-      onPress={onPress}
-      className={`rounded-xl p-4 mb-3 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-        }`}
-    >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center flex-1">
-          <View
-            className={`w-12 h-12 rounded-full items-center justify-center ${isDark ? 'bg-gray-700' : 'bg-gray-100'
-              }`}
-          >
-            <Icon size={20} color={isDark ? '#60a5fa' : '#3b82f6'} />
-          </View>
-          <View className="ml-4 flex-1">
-            <Text className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {title}
-            </Text>
-            {value && (
-              <Text className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                {value}
-              </Text>
-            )}
-          </View>
-        </View>
-      </View>
-    </Pressable>
-  );
-
-  const StatItem = ({ label, value, icon: Icon }: any) => (
-    <View
-      className={`flex-1 rounded-xl p-4 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-        }`}
-    >
-      <Icon size={20} color={isDark ? '#60a5fa' : '#3b82f6'} />
-      <Text className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-        {value}
-      </Text>
-      <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{label}</Text>
-    </View>
-  );
-
   return (
-    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <View className="flex-1 bg-background ease-in-out transition-all">
       <ScrollView
-        className={`flex-1 ${isWeb ? 'px-8' : 'px-4'}`}
+        className='px-4 sm:px-7'
         contentContainerStyle={{
-          paddingBottom: isWeb && isLargeScreen ? 32 : 90, // Extra padding for bottom nav on mobile
+          paddingBottom: isWeb && isLargeScreen ? 32 : 90,
         }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#3b82f6"
+            colors={['#3b82f6', '#8b5cf6', '#10b981']}
+          />
+        }
       >
-        {/* Header */}
-        <View className={isWeb ? 'pt-8 pb-6' : 'pt-6 pb-4'}>
-          <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        {/* Page Header */}
+        <View className='sm:pt-8 sm:pb-6 pt-6 pb-4'>
+          <Text className={`${isWeb ? 'text-4xl' : 'text-3xl'} font-bold text-foreground`}>
             Profile
           </Text>
-          <Text className={`mt-1 text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Manage your account
+          <Text className={`mt-2 ${isWeb ? 'text-lg' : 'text-base'} text-muted-foreground`}>
+            Manage your account and preferences
           </Text>
         </View>
 
-        {/* User Info */}
-        <View
-          className={`rounded-2xl p-6 mb-6 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            }`}
-        >
-          <View className="items-center">
-            <View className="w-24 h-24 rounded-full bg-blue-500 items-center justify-center mb-4">
-              <User size={40} color="#fff" />
-            </View>
-            <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {user?.name || 'User'}
-            </Text>
-            <Text className={`text-base mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {user?.email || ''}
-            </Text>
-            <View className="bg-blue-500 rounded-full px-4 py-2 mt-3">
-              <Text className="text-white font-semibold capitalize">{user?.role || 'Student'}</Text>
-            </View>
-          </View>
-        </View>
+        {/* User Profile Card */}
+        <ProfileHeader
+          name={user?.name}
+          email={user?.email}
+          role={user?.role}
+        />
 
-        {/* Stats - Only for Students */}
+        {/* Stats Grid - Only for Students */}
         {user?.role === 'student' && (
           <View className="mb-6">
-            <Text
-              className={`text-sm font-semibold mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-            >
-              YOUR ACHIEVEMENTS
+            <Text className={`${isWeb ? 'text-sm' : 'text-xs'} font-bold mb-4 text-muted-foreground dark:text-muted-foreground uppercase tracking-wider px-1`}>
+              Your Statistics
             </Text>
-            <View className="flex-row gap-3 mb-3">
-              <StatItem
-                icon={BookOpen}
-                label="Tests Taken"
-                value={stats?.testsCompleted || 0}
-              />
-              <StatItem
-                icon={Award}
-                label="Avg Score"
-                value={stats?.averageScore ? `${Math.round(stats.averageScore)}%` : '0%'}
-              />
-            </View>
+            {loading ? (
+              <View className={`flex-row ${isWeb && isLargeScreen ? 'gap-6' : 'gap-3'}`}>
+                <View className="flex-1 rounded-2xl p-6 bg-card border border-border h-32 animate-pulse" />
+                <View className="flex-1 rounded-2xl p-6 bg-card border border-border h-32 animate-pulse" />
+              </View>
+            ) : (
+              <View className={`flex-row ${isWeb && isLargeScreen ? 'gap-6' : 'gap-3'}`}>
+                <ProfileStatCard
+                  icon={BookOpen}
+                  label="Tests Completed"
+                  value={stats?.testsCompleted || 0}
+                  color="#3b82f6"
+                />
+                <ProfileStatCard
+                  icon={Award}
+                  label="Average Score"
+                  value={stats?.averageScore ? `${Math.round(stats.averageScore)}%` : '0%'}
+                  color="#10b981"
+                />
+              </View>
+            )}
           </View>
         )}
 
         {/* Admin Management - Only for Admins */}
         {user?.role === 'admin' && (
+
           <View className="mb-6">
-            <Pressable
+            <AdminCard
+              icon={Shield}
+              title="Admin Panel"
+              description="Manage users, departments, and settings"
               onPress={() => router.push('/admin')}
-            >
-              <View
-                className={`flex-row items-center rounded-2xl p-6 mb-4 ${isDark ? 'bg-gradient-to-r from-blue-900/50 to-purple-900/50 border border-blue-700' : 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200'
-                  }`}
-              >
-                <View className={`w-16 h-16 rounded-2xl items-center justify-center ${isDark ? 'bg-blue-600' : 'bg-blue-500'
-                  }`}>
-                  <Shield size={32} color="#fff" />
-                </View>
-                <View className="ml-4 flex-1">
-                  <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Admin Management
-                  </Text>
-                  <Text className={`text-sm mt-1 ${isDark ? 'text-blue-200' : 'text-blue-700'}`}>
-                    Manage users, departments, years & more
-                  </Text>
-                </View>
-                <Text className={`text-3xl ${isDark ? 'text-blue-300' : 'text-blue-500'}`}>
-                  →
-                </Text>
-              </View>
-            </Pressable>
+              color="#8b5cf6"
+              bgColor="bg-cyan-50"
+              darkBgColor="bg-cyan-900/20"
+            />
           </View>
         )}
 
-        {/* Settings */}
+        {/* Account Settings Section */}
         <View className="mb-6">
-          <Text
-            className={`text-sm font-semibold mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-          >
-            SETTINGS
+          <Text className={`${isWeb ? 'text-sm' : 'text-xs'} font-bold mb-4 text-muted-foreground uppercase tracking-wider px-1`}>
+            Account Settings
           </Text>
 
-          <MenuItem icon={User} title="Edit Profile" value="Update your information" />
-          <MenuItem
+          <ProfileMenuItem
             icon={Smartphone}
-            title="Your Devices"
-            value="Manage logged in devices"
+            title="Manage Devices"
+            value="View and manage logged in devices"
             onPress={() => router.push('/profile/devices')}
+            iconColor="#8b5cf6"
           />
+
+          <ProfileMenuItem
+            icon={Lock}
+            title="Security & Privacy"
+            value="Password and security settings"
+            onPress={() => router.push('/profile/security')}
+            iconColor="#ef4444"
+          />
+
+          <ProfileMenuItem
+            icon={Bell}
+            title="Notifications"
+            value="Manage your notification preferences"
+            onPress={() => router.push('/profile/notifications')}
+            iconColor="#f59e0b"
+          />
+        </View>
+
+        {/* Appearance Section */}
+        <View className="mb-6">
+          <Text className={`${isWeb ? 'text-sm' : 'text-xs'} font-bold mb-4 text-muted-foreground uppercase tracking-wider px-1`}>
+            Appearance
+          </Text>
+
           <Pressable
-            onPress={toggleColorScheme}
-            className={`rounded-xl p-4 mb-3 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-              }`}
+            onPress={handleToggleTheme}
+            disabled={themeTransitioning}
+            className={`rounded-2xl ${isWeb ? 'p-5' : 'p-4'} mb-3 bg-card border border-border transition-all`}
+            style={({ pressed }) => ({
+              opacity: themeTransitioning ? 0.7 : pressed ? 0.9 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 8,
+              elevation: 2,
+            })}
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center flex-1">
-                <View
-                  className={`w-12 h-12 rounded-full items-center justify-center ${isDark ? 'bg-gray-700' : 'bg-gray-100'
-                    }`}
+                <Animated.View
+                  className={`p-3 rounded-xl items-center justify-center`}
                 >
-                  {isDark ? (
-                    <Moon size={20} color="#60a5fa" />
+                  {colorScheme === 'dark' ? (
+                    <Moon size={isWeb ? 22 : 20} color="#60a5fa" />
                   ) : (
-                    <Sun size={20} color="#3b82f6" />
+                    <Sun size={isWeb ? 22 : 20} color="#fbbf24" />
                   )}
-                </View>
+                </Animated.View>
                 <View className="ml-4 flex-1">
-                  <Text className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  <Text className={`${isWeb ? 'text-base' : 'text-sm'} font-semibold text-foreground`}>
                     Theme
                   </Text>
-                  <Text className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {isDark ? 'Dark mode' : 'Light mode'}
+                  <Text className={`${isWeb ? 'text-sm' : 'text-xs'} mt-1 text-muted-foreground`}>
+                    {themeTransitioning ? 'Switching...' : colorScheme === 'dark' ? 'Dark mode enabled' : 'Light mode enabled'}
                   </Text>
                 </View>
               </View>
@@ -230,11 +241,45 @@ export default function ProfilePage() {
           </Pressable>
         </View>
 
-        {/* Logout */}
-        <Pressable className="bg-red-500 rounded-xl p-4 mb-6" onPress={handleLogout}>
-          <View className="flex-row items-center justify-center">
-            <LogOut size={20} color="#fff" />
-            <Text className="ml-2 text-white font-bold text-lg">Logout</Text>
+        {/* Help & Support Section */}
+        <View className="mb-6">
+          <Text className={`${isWeb ? 'text-sm' : 'text-xs'} font-bold mb-4 text-muted-foreground uppercase tracking-wider px-1`}>
+            Help & Support
+          </Text>
+
+          <ProfileMenuItem
+            icon={HelpCircle}
+            title="Help Center"
+            value="FAQs and support articles"
+            onPress={() => router.push('/profile/help')}
+            iconColor="#06b6d4"
+          />
+
+          <ProfileMenuItem
+            icon={Mail}
+            title="Contact Support"
+            value="Get help from our team"
+            onPress={() => router.push('/profile/contact')}
+            iconColor="#14b8a6"
+          />
+        </View>
+
+        {/* Logout Button */}
+        <Pressable
+          className={`rounded-2xl ${isWeb ? 'p-6' : 'p-5'} mb-6 bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 dark:border-red-500/40 hover:bg-red-500/20 active:bg-red-500/30`}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.9 : 1,
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          })}
+          onPress={handleLogout}
+        >
+          <View className="flex-row items-center">
+            <View className="w-10 h-10 rounded-xl items-center justify-center mr-3">
+              <LogOut size={20} color="#ef4444" strokeWidth={2.5} />
+            </View>
+            <Text className={`text-red-500 dark:text-red-400 font-bold ${isWeb ? 'text-lg' : 'text-base'}`}>
+              Logout
+            </Text>
           </View>
         </Pressable>
       </ScrollView>

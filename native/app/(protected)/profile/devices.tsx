@@ -1,5 +1,6 @@
-import { View, ScrollView, Pressable, Platform, Alert, RefreshControl } from 'react-native';
+import { View, ScrollView, RefreshControl } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 import {
   Smartphone,
   Monitor,
@@ -10,16 +11,13 @@ import {
   Clock,
   XCircle,
   RefreshCw,
-  MapPin,
-  ChevronLeft
 } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import api from '@/lib/api';
-import { useWebAlert } from '@/components/ui/web-alert';
 import HeaderTile from '@/components/ui/headerTile';
+import { useCustomAlert } from '@/components/ui/custom-alert';
 
 interface Device {
   id: number;
@@ -34,15 +32,25 @@ interface Device {
 }
 
 export default function UserDevicesPage() {
-  const { colorScheme } = useColorScheme();
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
-  const isDark = colorScheme === 'dark';
+  const { showAlert } = useCustomAlert();
   const [devices, setDevices] = useState<Device[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { showAlert, AlertComponent } = useWebAlert();
-  const isWeb = Platform.OS === 'web';
+
+  const fetchDevices = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/devices');
+      setDevices(response.data.devices || []);
+    } catch (error) {
+      showAlert('Error', 'Failed to load devices');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -50,27 +58,10 @@ export default function UserDevicesPage() {
       return;
     }
     fetchDevices();
-  }, [user]);
-
-
-  const fetchDevices = async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.get('/devices');
-      setDevices(response.data.devices || []);
-    } catch (error) {
-      const errorAlertFunc = isWeb ? showAlert : Alert.alert;
-      errorAlertFunc('Error', 'Failed to load devices');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
+  }, [user, router, fetchDevices]);
 
   const handleRemoveDevice = (deviceId: number, deviceName: string) => {
-    const alertFunc = isWeb ? showAlert : Alert.alert;
-
-    alertFunc(
+    showAlert(
       'Remove Device',
       `Remove "${deviceName}" from your account? You'll need to log in again on that device.`,
       [
@@ -81,12 +72,10 @@ export default function UserDevicesPage() {
           onPress: async () => {
             try {
               await api.delete(`/devices/${deviceId}`);
-              const successAlertFunc = isWeb ? showAlert : Alert.alert;
-              successAlertFunc('Success', 'Device removed successfully');
+              showAlert('Success', 'Device removed successfully');
               fetchDevices();
             } catch (error: any) {
-              const errorAlertFunc = isWeb ? showAlert : Alert.alert;
-              errorAlertFunc('Error', error.response?.data?.error || 'Failed to remove device');
+              showAlert('Error', error.response?.data?.error || 'Failed to remove device');
             }
           }
         }
@@ -95,9 +84,7 @@ export default function UserDevicesPage() {
   };
 
   const handleRemoveAllOthers = () => {
-    const alertFunc = isWeb ? showAlert : Alert.alert;
-
-    alertFunc(
+    showAlert(
       'Log Out All Other Devices',
       'This will log you out from all devices except this one. Continue?',
       [
@@ -108,12 +95,10 @@ export default function UserDevicesPage() {
           onPress: async () => {
             try {
               await api.post('/devices/remove-all-except-current');
-              const successAlertFunc = isWeb ? showAlert : Alert.alert;
-              successAlertFunc('Success', 'Logged out from all other devices');
+              showAlert('Success', 'Logged out from all other devices');
               fetchDevices();
             } catch (error: any) {
-              const errorAlertFunc = isWeb ? showAlert : Alert.alert;
-              errorAlertFunc('Error', error.response?.data?.error || 'Failed to log out devices');
+              showAlert('Error', error.response?.data?.error || 'Failed to log out devices');
             }
           }
         }
@@ -183,10 +168,7 @@ export default function UserDevicesPage() {
     const statusColor = getStatusColor(device.status);
 
     return (
-      <View
-        className={`rounded-xl p-4 mb-3 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-          }`}
-      >
+      <View className="rounded-xl p-4 mb-3 bg-card border border-border">
         <View className="flex-row items-start justify-between mb-3">
           <View className="flex-row items-center flex-1">
             <View
@@ -196,7 +178,7 @@ export default function UserDevicesPage() {
               <DeviceIcon size={24} color={statusColor} />
             </View>
             <View className="flex-1">
-              <Text className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <Text className="font-bold text-base text-foreground">
                 {device.device_name}
               </Text>
               <View className="flex-row items-center mt-1">
@@ -209,47 +191,47 @@ export default function UserDevicesPage() {
           </View>
 
           {device.status !== 'active' && (
-            <Pressable
+            <Button
               onPress={() => handleRemoveDevice(device.id, device.device_name)}
-              className={`p-2 rounded-lg ${isDark ? 'bg-red-900/20' : 'bg-red-50'
-                }`}
+              variant="destructive"
+              size="icon"
             >
-              <Trash2 size={18} color="#ef4444" />
-            </Pressable>
+              <Trash2 size={18} color="#ffffff" />
+            </Button>
           )}
         </View>
 
         <View className="gap-2">
           <View className="flex-row items-center">
-            <Text className={`text-xs font-semibold w-20 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            <Text className="text-xs font-semibold w-20 text-muted-foreground">
               Browser
             </Text>
-            <Text className={`text-xs flex-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            <Text className="text-xs flex-1 text-foreground">
               {device.browser}
             </Text>
           </View>
 
           <View className="flex-row items-center">
-            <Text className={`text-xs font-semibold w-20 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            <Text className="text-xs font-semibold w-20 text-muted-foreground">
               OS
             </Text>
-            <Text className={`text-xs flex-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            <Text className="text-xs flex-1 text-foreground">
               {device.os}
             </Text>
           </View>
           <View className="flex-row items-center">
-            <Text className={`text-xs font-semibold w-20 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            <Text className="text-xs font-semibold w-20 text-muted-foreground">
               IP
             </Text>
-            <Text className={`text-xs flex-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            <Text className="text-xs flex-1 text-foreground">
               {device.ip_address}
             </Text>
           </View>
           <View className="flex-row items-center">
-            <Text className={`text-xs font-semibold w-20 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            <Text className="text-xs font-semibold w-20 text-muted-foreground">
               Last Seen
             </Text>
-            <Text className={`text-xs flex-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            <Text className="text-xs flex-1 text-foreground">
               {formatDate(device.last_active)}
             </Text>
           </View>
@@ -257,43 +239,39 @@ export default function UserDevicesPage() {
       </View>
     );
   };
-  const canGoBack = router.canGoBack?.() ?? false;
   return (
-    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <View className="flex-1 bg-background">
 
       <HeaderTile title='Your Devices' foot="Manage where you're logged in" />
       {/* Header */}
       <View className="px-6 pb-4">
         {/* Stats */}
-        <View
-          className={`rounded-xl p-4 mt-4 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            }`}
-        >
+        <View className="rounded-xl p-4 mt-4 bg-card border border-border">
           <View className="flex-row items-center justify-between">
             <View>
-              <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <Text className="text-xs text-muted-foreground">
                 Active Devices
               </Text>
-              <Text className={`text-2xl font-bold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <Text className="text-2xl font-bold mt-1 text-foreground">
                 {devices.filter(d => d.status === 'active' || d.status === 'recent').length}
               </Text>
             </View>
             <View>
-              <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <Text className="text-xs text-muted-foreground">
                 Total Devices
               </Text>
-              <Text className={`text-2xl font-bold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <Text className="text-2xl font-bold mt-1 text-foreground">
                 {devices.length}
               </Text>
             </View>
             {devices.length > 1 && (
-              <Pressable
+              <Button
                 onPress={handleRemoveAllOthers}
-                className={`px-4 py-2 rounded-lg ${isDark ? 'bg-red-900/20' : 'bg-red-50'
-                  }`}
+                variant="destructive"
+                size="icon"
               >
-                <LogOut size={18} color="#ef4444" />
-              </Pressable>
+                <LogOut size={18} color="#ffffff" />
+              </Button>
             )}
           </View>
         </View>
@@ -310,21 +288,21 @@ export default function UserDevicesPage() {
               setIsRefreshing(true);
               fetchDevices();
             }}
-            tintColor={isDark ? '#9ca3af' : '#6b7280'}
+            tintColor="#6b7280"
           />
         }
       >
         {isLoading && devices.length === 0 ? (
           <View className="py-20 items-center">
-            <RefreshCw size={48} color={isDark ? '#6b7280' : '#9ca3af'} className="animate-spin" />
-            <Text className={`mt-4 text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <RefreshCw size={48} color="#6b7280" />
+            <Text className="mt-4 text-lg text-muted-foreground">
               Loading devices...
             </Text>
           </View>
         ) : devices.length === 0 ? (
           <View className="py-20 items-center">
-            <Smartphone size={48} color={isDark ? '#6b7280' : '#9ca3af'} />
-            <Text className={`mt-4 text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <Smartphone size={48} color="#6b7280" />
+            <Text className="mt-4 text-lg text-muted-foreground">
               No devices found
             </Text>
           </View>
@@ -336,9 +314,6 @@ export default function UserDevicesPage() {
           </>
         )}
       </ScrollView>
-
-      {/* Web Alert Component */}
-      {isWeb && <AlertComponent />}
     </View>
   );
 }

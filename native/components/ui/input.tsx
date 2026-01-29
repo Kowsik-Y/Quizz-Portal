@@ -10,6 +10,7 @@ export interface InputProps extends RNTextInputProps {
   hint?: string;
   leftIcon?: LucideIcon;
   rightIcon?: LucideIcon;
+  iconColor?: string;
   onRightIconPress?: () => void;
   containerClassName?: string;
   inputClassName?: string;
@@ -30,6 +31,7 @@ export const Input = forwardRef<RNTextInput, InputProps>(
       containerClassName,
       inputClassName,
       labelClassName,
+      iconColor = '#3b82f6',
       variant = 'default',
       size = 'md',
       editable = true,
@@ -43,13 +45,13 @@ export const Input = forwardRef<RNTextInput, InputProps>(
 
     const sizeStyles = {
       sm: 'py-2 text-sm',
-      md: 'py-3 text-base',
-      lg: 'py-4 text-lg',
+      md: 'py-1 text-base sm:py-3',
+      lg: 'py-2 sm:py-4 text-lg',
     };
 
     const variantStyles = {
       default: cn(
-        'bg-secondary/50 border-2 border-border',
+        'bg-secondary border-2 border-border',
         isFocused && 'border-primary',
         error && 'border-destructive'
       ),
@@ -83,7 +85,7 @@ export const Input = forwardRef<RNTextInput, InputProps>(
           )}
         >
           {LeftIcon && (
-            <LeftIcon size={22} color={error ? '#ef4444' : '#3b82f6'} />
+            <LeftIcon size={22} color={error ? '#ef4444' : iconColor} />
           )}
           
           <RNTextInput
@@ -103,6 +105,7 @@ export const Input = forwardRef<RNTextInput, InputProps>(
                 fontFamily: 'Poppins_500Medium',
                 // Don't set fontWeight on Android - causes system font fallback
                 ...(Platform.OS !== 'android' && { fontWeight: '500' as const }),
+                // Handle autofill background color for web
               },
               style
             ]}
@@ -119,7 +122,7 @@ export const Input = forwardRef<RNTextInput, InputProps>(
               disabled={!onRightIconPress}
               className="ml-2"
             >
-              <RightIcon size={22} color={error ? '#ef4444' : '#6b7280'} />
+              <RightIcon size={22} color={error ? '#ef4444' : iconColor} />
             </Pressable>
           )}
         </View>
@@ -143,7 +146,7 @@ export const Input = forwardRef<RNTextInput, InputProps>(
 Input.displayName = 'Input';
 
 // Password Input Component
-export interface PasswordInputProps extends Omit<InputProps, 'secureTextEntry' | 'rightIcon' | 'onRightIconPress'> {}
+export type PasswordInputProps = Omit<InputProps, 'secureTextEntry' | 'rightIcon' | 'onRightIconPress'>;
 
 export const PasswordInput = forwardRef<RNTextInput, PasswordInputProps>(
   (props, ref) => {
@@ -151,6 +154,7 @@ export const PasswordInput = forwardRef<RNTextInput, PasswordInputProps>(
 
     return (
       <Input
+
         ref={ref}
         secureTextEntry={!showPassword}
         rightIcon={showPassword ? EyeOff : Eye}

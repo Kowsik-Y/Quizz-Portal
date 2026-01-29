@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import { View, ScrollView, Platform } from 'react-native';
-import { GraduationCap } from 'lucide-react-native';
+import { GraduationCap ,Mail, Lock} from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { Input, PasswordInput } from '@/components/ui/input';
-import { Mail, Lock } from 'lucide-react-native';
-import { useCustomAlert } from '@/components/ui/custom-alert';
-
+import { showToast } from '@/lib/toast';
 export default function LoginScreen() {
   const router = useRouter();
   const { login, loading } = useAuthStore();
-  const { showAlert } = useCustomAlert();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -23,7 +20,7 @@ export default function LoginScreen() {
 
   const handleSubmit = async () => {
     if (!formData.email || !formData.password) {
-      showAlert('Error', 'Please fill in all fields');
+      showToast.error('Please fill in all fields');
       return;
     }
 
@@ -31,7 +28,6 @@ export default function LoginScreen() {
     if (success) {
       router.replace('/');
     }
-    // Error handling is done by the store with toast notifications
   };
 
   return (

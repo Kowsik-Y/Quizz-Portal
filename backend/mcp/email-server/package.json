@@ -1,0 +1,8 @@
+{
+	"name": "quiz-portal-mcp-email-server",
+	"private": true,
+	"type": "module",
+	"version": "1.0.0",
+	"description": "MCP stdio server for sending emails",
+	"main": "index.mjs"
+}

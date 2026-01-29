@@ -1,5 +1,6 @@
 import { View, ScrollView, Pressable, Platform, TextInput, Switch, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 import {
   Mail,
   Bell,
@@ -338,30 +339,31 @@ export default function SystemSettingsPage() {
 
         {/* Action Buttons */}
         <View className="mt-8 gap-3">
-          <Pressable
+          <Button
             onPress={handleSaveSettings}
             disabled={loading}
-            className="bg-blue-500 rounded-xl p-4 flex-row items-center justify-center"
-            style={({ pressed }) => [{ opacity: pressed || loading ? 0.5 : 1 }]}
+            variant="default"
           >
-            <Save size={20} color="#fff" />
-            <Text className="ml-2 text-white font-bold text-lg">
-              {loading ? 'Saving...' : 'Save Settings'}
-            </Text>
-          </Pressable>
+            <View className="flex-row items-center">
+              <Save size={20} color="#fff" />
+              <Text className="ml-2 text-white font-bold text-lg">
+                {loading ? 'Saving...' : 'Save Settings'}
+              </Text>
+            </View>
+          </Button>
 
-          <Pressable
+          <Button
             onPress={handleResetSettings}
             disabled={loading}
-            className={`rounded-xl p-4 flex-row items-center justify-center border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-              }`}
-            style={({ pressed }) => [{ opacity: pressed || loading ? 0.5 : 1 }]}
+            variant="outline"
           >
-            <RotateCcw size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
-            <Text className={`ml-2 font-bold text-lg ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              Reset to Defaults
-            </Text>
-          </Pressable>
+            <View className="flex-row items-center">
+              <RotateCcw size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
+              <Text className={`ml-2 font-bold text-lg ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                Reset to Defaults
+              </Text>
+            </View>
+          </Button>
         </View>
       </ScrollView>
     </View>

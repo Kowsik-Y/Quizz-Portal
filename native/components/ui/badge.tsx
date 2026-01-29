@@ -58,7 +58,7 @@ export const Badge = ({
       )}
       {...props}
     >
-      <Text className={cn('font-semibold', textVariantStyles[variant], textSizeStyles[size])}>
+      <Text className={cn('font-medium', textVariantStyles[variant], textSizeStyles[size])}>
         {children}
       </Text>
     </View>
@@ -140,7 +140,7 @@ export const CountBadge = ({
       )}
       {...props}
     >
-      <Text className="text-white text-xs font-bold">
+      <Text className="text-white text-xs font-medium">
         {displayCount}
       </Text>
     </View>

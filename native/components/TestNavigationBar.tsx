@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { useColorScheme } from 'nativewind';
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,7 +8,6 @@ import {
   CheckCircle,
   Circle,
   Clock,
-  AlertCircle
 } from 'lucide-react-native';
 
 interface TestNavigationBarProps {
@@ -35,8 +33,6 @@ export function TestNavigationBar({
   onSubmit,
   timeRemaining
 }: TestNavigationBarProps) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const isWeb = Platform.OS === 'web';
 
   const formatTime = (seconds: number) => {
@@ -52,7 +48,7 @@ export function TestNavigationBar({
   };
 
   return (
-    <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+    <View className="bg-card border-t border-border">
       {/* Question Palette - Desktop/Web Only */}
       {!isWeb && (
         <View className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -93,9 +89,7 @@ export function TestNavigationBar({
                         ? 'border-green-500 bg-green-500/10'
                         : status === 'flagged'
                           ? 'border-orange-500 bg-orange-500/10'
-                          : isDark
-                            ? 'border-gray-600 bg-gray-700'
-                            : 'border-gray-300 bg-gray-50'
+                          : 'border-border bg-muted'
                     }
                   `}
                 >
@@ -242,8 +236,6 @@ export function TestSidebar({
   timeRemaining,
   testTitle
 }: TestNavigationBarProps & { testTitle?: string }) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -265,11 +257,11 @@ export function TestSidebar({
 
   return (
     <View
-      className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-l`}
+      className="bg-card border-border border-l"
       style={{ width: 280 }}
     >
       {/* Header */}
-      <View className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+      <View className="p-4 border-b border-border">
         <Text className="text-lg font-bold text-gray-900 dark:text-white mb-2">
           {testTitle || 'Test'}
         </Text>
@@ -294,7 +286,7 @@ export function TestSidebar({
       </View>
 
       {/* Stats */}
-      <View className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+      <View className="p-4 border-b border-border">
         <Text className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
           Progress
         </Text>
@@ -345,9 +337,7 @@ export function TestSidebar({
                       ? 'border-green-500 bg-green-500/10'
                       : status === 'flagged'
                         ? 'border-orange-500 bg-orange-500/10'
-                        : isDark
-                          ? 'border-gray-600 bg-gray-700'
-                          : 'border-gray-300 bg-gray-50'
+                        : 'border-border bg-muted'
                   }
                 `}
               >
@@ -383,7 +373,7 @@ export function TestSidebar({
       {/* Warning */}
       {/* Legend */}
 
-      <View className={`p-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+      <View className="p-4 border-t border-border">
         <View className="flex-row gap-4 m-4 flex-wrap">
           <View className="flex-row items-center gap-2">
             <View className="w-6 h-6 rounded bg-green-500/20 border-2 border-green-500" />

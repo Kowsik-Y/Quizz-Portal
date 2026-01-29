@@ -9,10 +9,26 @@ exports.getAllTests = async (req, res) => {
     // Students only see active tests
     const userRole = req.user?.role || 'student';
     const isTeacherOrAdmin = userRole === 'teacher' || userRole === 'admin';
+    const userId = req.user?.id;
+    
+    console.log('getAllTests - User info:', { userId, userRole, isTeacherOrAdmin });
     
     let query = `
       SELECT t.*, c.title as course_title,
         (SELECT COUNT(*) FROM questions WHERE test_id = t.id) as question_count
+    `;
+    
+    // Add user attempts count for all users (not just students)
+    if (userId) {
+      query += `,
+        (SELECT CAST(COUNT(*) AS INTEGER) FROM test_attempts WHERE test_id = t.id AND student_id = $1 AND status = 'submitted') as user_attempts
+      `;
+      console.log('Adding user_attempts to query for userId:', userId);
+    } else {
+      console.log('No userId found - user_attempts will not be included');
+    }
+    
+    query += `
       FROM tests t
       LEFT JOIN courses c ON t.course_id = c.id
       WHERE 1=1
@@ -25,6 +41,11 @@ exports.getAllTests = async (req, res) => {
     
     const params = [];
     
+    // Add userId as first param if present
+    if (userId) {
+      params.push(userId);
+    }
+    
     if (course_id) {
       params.push(course_id);
       query += ` AND t.course_id = $${params.length}`;
@@ -33,6 +54,17 @@ exports.getAllTests = async (req, res) => {
     query += ' ORDER BY t.created_at DESC';
 
     const result = await db.query(query, params);
+    
+    // Debug logging for first test
+    if (result.rows.length > 0 && !isTeacherOrAdmin) {
+      console.log('Sample test data:', {
+        id: result.rows[0].id,
+        title: result.rows[0].title,
+        max_attempts: result.rows[0].max_attempts,
+        user_attempts: result.rows[0].user_attempts
+      });
+    }
+    
     res.json({ tests: result.rows });
   } catch (error) {
     console.error('Get tests error:', error);

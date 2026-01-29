@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, Modal, Pressable, Platform, Animated } from 'react-native';
+import { View, Modal, Pressable, Animated } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { X } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 
 interface AlertButton {
   text: string;
@@ -25,8 +24,6 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
   buttons,
   onDismiss,
 }) => {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
   
   // Animation values
   const scaleAnim = React.useRef(new Animated.Value(0.9)).current;
@@ -61,7 +58,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
       opacityAnim.setValue(0);
       slideAnim.setValue(50);
     }
-  }, [visible]);
+  }, [visible, scaleAnim, opacityAnim, slideAnim]);
 
   const handleButtonPress = (button: AlertButton) => {
     if (button.onPress) {
@@ -77,7 +74,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
       case 'destructive':
         return 'bg-red-500';
       case 'cancel':
-        return isDark ? 'bg-gray-700' : 'bg-gray-200';
+        return 'bg-muted';
       default:
         return 'bg-blue-500';
     }
@@ -86,7 +83,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
   const getButtonTextColor = (style?: string) => {
     switch (style) {
       case 'cancel':
-        return isDark ? 'text-white' : 'text-gray-900';
+        return 'text-foreground';
       default:
         return 'text-white';
     }
@@ -126,9 +123,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
         >
           <Pressable
             onPress={(e) => e.stopPropagation()}
-            className={`rounded-2xl p-6 ${
-              isDark ? 'bg-gray-800' : 'bg-white'
-            }`}
+            className="rounded-2xl p-6 bg-card"
             style={{
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 8 },
@@ -144,17 +139,17 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
               className="absolute top-4 right-4 w-8 h-8 items-center justify-center rounded-full"
               style={{ opacity: 0.6 }}
             >
-              <X size={20} color={isDark ? '#fff' : '#000'} />
+              <X size={20} color="#6b7280" />
             </Pressable>
           )}
 
           {/* Title */}
-          <Text className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <Text className="text-2xl font-bold mb-3 text-foreground">
             {title}
           </Text>
 
           {/* Message */}
-          <Text className={`text-base mb-6 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+          <Text className="text-base mb-6 text-muted-foreground">
             {message}
           </Text>
 

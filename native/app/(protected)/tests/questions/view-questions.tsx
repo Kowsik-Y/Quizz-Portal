@@ -1,5 +1,6 @@
 import { View, ScrollView, Pressable, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Save, X, Plus, Sparkles, Wand2 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
@@ -528,17 +529,18 @@ export default function ViewQuestionsPage() {
                 <Text className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   Test Cases
                 </Text>
-                <Pressable
+                <Button
                   onPress={() => setEditForm({
                     ...editForm,
                     test_cases: [...editForm.test_cases, { input: '', expected_output: '', points: 1 }]
                   })}
-                  className={`px-3 py-1 rounded-lg ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`}
+                  variant="secondary"
+                  className="px-3 py-1"
                 >
                   <Text className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
                     + Add Test Case
                   </Text>
-                </Pressable>
+                </Button>
               </View>
               
               {editForm.test_cases.map((testCase, idx) => (
@@ -636,35 +638,29 @@ export default function ViewQuestionsPage() {
 
           {/* Action Buttons */}
           <View className="flex-row gap-3">
-            <Pressable
+            <Button
               onPress={handleCancelEdit}
               disabled={isSaving}
-              className={`flex-1 py-3 rounded-lg border flex-row items-center justify-center gap-2 ${
-                isDark 
-                  ? 'border-gray-700 bg-gray-900' 
-                  : 'border-gray-300 bg-gray-50'
-              }`}
+              variant="outline"
+              className="flex-1 py-3 flex-row items-center justify-center gap-2"
             >
               <X size={18} color={isDark ? '#9ca3af' : '#6b7280'} />
               <Text className={`font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Cancel
               </Text>
-            </Pressable>
+            </Button>
 
-            <Pressable
+            <Button
               onPress={() => handleSave(question.id, question.question_type)}
               disabled={isSaving || !editForm.question_text.trim() || !editForm.points}
-              className={`flex-1 py-3 rounded-lg flex-row items-center justify-center gap-2 ${
-                isSaving || !editForm.question_text.trim() || !editForm.points
-                  ? 'bg-gray-400' 
-                  : 'bg-blue-500'
-              }`}
+              variant="default"
+              className="flex-1 py-3 flex-row items-center justify-center gap-2"
             >
               <Save size={18} color="white" />
               <Text className="text-white font-semibold">
                 {isSaving ? 'Saving...' : 'Save'}
               </Text>
-            </Pressable>
+            </Button>
           </View>
         </View>
       );
@@ -713,34 +709,28 @@ export default function ViewQuestionsPage() {
 
           {isTeacherOrAdmin && (
             <View className="flex-row gap-2">
-              <Pressable
+              <Button
                 onPress={() => handleEdit(question)}
                 disabled={editingId !== null}
-                className={`p-2 rounded-lg ${
-                  editingId !== null
-                    ? isDark ? 'bg-gray-700' : 'bg-gray-200'
-                    : isDark ? 'bg-blue-900/30' : 'bg-blue-100'
-                }`}
+                variant="secondary"
+                className="p-2"
               >
                 <Edit size={18} color={isDark ? '#60a5fa' : '#3b82f6'} />
-              </Pressable>
+              </Button>
 
               {user?.role === 'admin' && (
-                <Pressable
+                <Button
                   onPress={() => handleDelete(question.id)}
                   disabled={isDeleting || editingId !== null}
-                  className={`p-2 rounded-lg ${
-                    isDeleting || editingId !== null
-                      ? isDark ? 'bg-gray-700' : 'bg-gray-200'
-                      : isDark ? 'bg-red-900/30' : 'bg-red-100'
-                  }`}
+                  variant="destructive"
+                  className="p-2"
                 >
                   {isDeleting ? (
                     <ActivityIndicator size="small" color="#ef4444" />
                   ) : (
                     <Trash2 size={18} color="#ef4444" />
                   )}
-                </Pressable>
+                </Button>
               )}
             </View>
           )}
@@ -1144,14 +1134,11 @@ export default function ViewQuestionsPage() {
               </View>
 
               {/* Generate Button */}
-              <Pressable
+              <Button
                 onPress={handleGenerateQuestions}
                 disabled={generating || !aiPrompt.trim()}
-                className={`py-4 mb-10 rounded-lg flex-row items-center justify-center gap-2 ${
-                  generating || !aiPrompt.trim()
-                    ? 'bg-gray-400'
-                    : 'bg-purple-600'
-                }`}
+                variant="default"
+                className="py-4 mb-10 flex-row items-center justify-center gap-2"
               >
                 {generating ? (
                   <>
@@ -1164,7 +1151,7 @@ export default function ViewQuestionsPage() {
                     <Text className="text-white font-bold">Generate Questions</Text>
                   </>
                 )}
-              </Pressable>
+              </Button>
             </ScrollView>
           </View>
 )}
@@ -1338,17 +1325,18 @@ export default function ViewQuestionsPage() {
                                   <Text className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     Test Cases
                                   </Text>
-                                  <Pressable
+                                  <Button
                                     onPress={() => setEditGeneratedForm({
                                       ...editGeneratedForm,
                                       test_cases: [...editGeneratedForm.test_cases, { input: '', expected_output: '', points: 1 }]
                                     })}
-                                    className={`px-3 py-1 rounded-lg ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`}
+                                    variant="secondary"
+                                    className="px-3 py-1"
                                   >
                                     <Text className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
                                       + Add Test Case
                                     </Text>
-                                  </Pressable>
+                                  </Button>
                                 </View>
 
                                 {editGeneratedForm.test_cases.map((testCase, idx) => (
@@ -1446,34 +1434,28 @@ export default function ViewQuestionsPage() {
 
                             {/* Action Buttons */}
                             <View className="flex-row gap-3">
-                              <Pressable
+                              <Button
                                 onPress={handleCancelEditGenerated}
-                                className={`flex-1 py-3 rounded-lg border flex-row items-center justify-center gap-2 ${
-                                  isDark 
-                                    ? 'border-gray-700 bg-gray-900' 
-                                    : 'border-gray-300 bg-gray-50'
-                                }`}
+                                variant="outline"
+                                className="flex-1 py-3 flex-row items-center justify-center gap-2"
                               >
                                 <X size={18} color={isDark ? '#9ca3af' : '#6b7280'} />
                                 <Text className={`font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                   Cancel
                                 </Text>
-                              </Pressable>
+                              </Button>
 
-                              <Pressable
+                              <Button
                                 onPress={() => handleSaveGenerated(idx)}
                                 disabled={!editGeneratedForm.question_text.trim() || !editGeneratedForm.points}
-                                className={`flex-1 py-3 rounded-lg flex-row items-center justify-center gap-2 ${
-                                  !editGeneratedForm.question_text.trim() || !editGeneratedForm.points
-                                    ? 'bg-gray-400' 
-                                    : 'bg-blue-500'
-                                }`}
+                                variant="default"
+                                className="flex-1 py-3 flex-row items-center justify-center gap-2"
                               >
                                 <Save size={18} color="white" />
                                 <Text className="text-white font-semibold">
                                   Save
                                 </Text>
-                              </Pressable>
+                              </Button>
                             </View>
                           </View>
                         );
@@ -1586,24 +1568,20 @@ export default function ViewQuestionsPage() {
 
                     {/* Action Buttons */}
                     <View className="flex-row gap-3 mt-4 mb-14">
-                      <Pressable
+                      <Button
                         onPress={handleClearGenerated}
-                        className={`flex-1 py-3 rounded-lg border ${
-                          isDark ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'
-                        }`}
+                        variant="outline"
+                        className="flex-1 py-3"
                       >
                         <Text className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                           Clear All
                         </Text>
-                      </Pressable>
-                      <Pressable
+                      </Button>
+                      <Button
                         onPress={handleAddSelectedQuestions}
                         disabled={addingQuestions || generatedQuestions.filter(q => q.selected).length === 0}
-                        className={`flex-1 py-3 rounded-lg ${
-                          addingQuestions || generatedQuestions.filter(q => q.selected).length === 0
-                            ? 'bg-gray-400'
-                            : 'bg-purple-600'
-                        }`}
+                        variant="default"
+                        className="flex-1 py-3"
                       >
                         <Text className="text-white text-center font-semibold">
                           {addingQuestions
@@ -1611,7 +1589,7 @@ export default function ViewQuestionsPage() {
                             : `Add ${generatedQuestions.filter(q => q.selected).length} Selected`
                           }
                         </Text>
-                      </Pressable>
+                      </Button>
                     </View>
                   </>
                 )}
@@ -1755,17 +1733,18 @@ export default function ViewQuestionsPage() {
                                   <Text className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     Test Cases
                                   </Text>
-                                  <Pressable
+                                  <Button
                                     onPress={() => setEditForm({
                                       ...editForm,
                                       test_cases: [...editForm.test_cases, { input: '', expected_output: '', points: 1 }]
                                     })}
-                                    className={`px-3 py-1 rounded-lg ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`}
+                                    variant="secondary"
+                                    className="px-3 py-1"
                                   >
                                     <Text className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
                                       + Add Test Case
                                     </Text>
-                                  </Pressable>
+                                  </Button>
                                 </View>
 
                                 {editForm.test_cases.map((testCase, idx) => (
@@ -1861,19 +1840,21 @@ export default function ViewQuestionsPage() {
                               </View>
                             )}
                             <View className="flex-row gap-2 mt-2">
-                              <Pressable
+                              <Button
                                 onPress={() => setEditingId(null)}
-                                className={`flex-1 py-2 rounded border ${isDark ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}
+                                variant="outline"
+                                className="flex-1 py-2"
                               >
                                 <Text className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Cancel</Text>
-                              </Pressable>
-                              <Pressable
+                              </Button>
+                              <Button
                                 onPress={() => handleSave(q.id, q.question_type)}
-                                className={`flex-1 py-2 rounded ${editForm.question_text.trim() ? 'bg-blue-600' : 'bg-gray-400'}`}
                                 disabled={!editForm.question_text.trim()}
+                                variant="default"
+                                className="flex-1 py-2"
                               >
                                 <Text className="text-center text-white font-semibold">Save</Text>
-                              </Pressable>
+                              </Button>
                             </View>
                           </View>
                         ) : (

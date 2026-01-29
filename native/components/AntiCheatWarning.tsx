@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   X
 } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 
 interface AntiCheatWarningProps {
   visible: boolean;
@@ -22,8 +21,6 @@ interface AntiCheatWarningProps {
 }
 
 export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: AntiCheatWarningProps) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const [hasScrolled, setHasScrolled] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
@@ -76,32 +73,32 @@ export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: An
       onRequestClose={onDecline}
     >
       <View className="flex-1 bg-black/60 justify-center items-center p-4">
-        <View className={`w-full max-w-2xl rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-2xl overflow-hidden`}>
+        <View className="w-full max-w-2xl rounded-2xl bg-card shadow-2xl overflow-hidden">
           {/* Header */}
-          <View className={`${isDark ? 'bg-red-900/20' : 'bg-red-50'} p-6 border-b ${isDark ? 'border-red-800' : 'border-red-200'}`}>
+          <View className="bg-red-500/20 p-6 border-b border-border">
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-row items-center flex-1">
                 <View className="bg-red-500 p-3 rounded-full mr-4">
                   <Shield size={28} color="white" />
                 </View>
                 <View className="flex-1">
-                  <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  <Text className="text-2xl font-bold text-foreground">
                     Anti-Cheating Rules
                   </Text>
-                  <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
+                  <Text className="text-sm text-muted-foreground mt-1">
                     {testTitle}
                   </Text>
                 </View>
               </View>
               <Pressable onPress={onDecline} className="p-2">
-                <X size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
+                <X size={24} color="#6b7280" />
               </Pressable>
             </View>
 
-            <View className={`${isDark ? 'bg-red-900/30' : 'bg-red-100'} p-4 rounded-lg border-l-4 border-red-500`}>
+            <View className="bg-red-500/30 p-4 rounded-lg border-l-4 border-red-500">
               <View className="flex-row items-start">
                 <AlertTriangle size={20} color="#ef4444" className="mr-2 mt-0.5" />
-                <Text className={`flex-1 font-semibold ${isDark ? 'text-red-200' : 'text-red-800'}`}>
+                <Text className="flex-1 font-semibold text-red-200">
                   All violations will be automatically recorded and visible to your instructor
                 </Text>
               </View>
@@ -114,7 +111,7 @@ export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: An
             onScroll={handleScroll}
             scrollEventThrottle={16}
           >
-            <Text className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <Text className="text-lg font-semibold mb-4 text-foreground">
               The following anti-cheating measures are active:
             </Text>
 
@@ -123,7 +120,7 @@ export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: An
               return (
                 <View 
                   key={index}
-                  className={`flex-row p-4 rounded-xl mb-3 ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}
+                  className="flex-row p-4 rounded-xl mb-3 bg-muted"
                 >
                   <View 
                     className="p-3 rounded-full mr-4"
@@ -132,10 +129,10 @@ export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: An
                     <Icon size={24} color={rule.color} />
                   </View>
                   <View className="flex-1">
-                    <Text className={`text-base font-semibold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <Text className="text-base font-semibold mb-1 text-foreground">
                       {rule.title}
                     </Text>
-                    <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <Text className="text-sm text-muted-foreground">
                       {rule.description}
                     </Text>
                   </View>
@@ -143,23 +140,23 @@ export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: An
               );
             })}
 
-            <View className={`mt-6 p-4 rounded-xl border-2 ${isDark ? 'bg-blue-900/20 border-blue-700' : 'bg-blue-50 border-blue-200'}`}>
-              <Text className={`text-sm font-semibold mb-2 ${isDark ? 'text-blue-200' : 'text-blue-800'}`}>
+            <View className="mt-6 p-4 rounded-xl border-2 bg-blue-500/20 border-blue-500">
+              <Text className="text-sm font-semibold mb-2 text-blue-200">
                 📊 Violation Report
               </Text>
-              <Text className={`text-sm ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+              <Text className="text-sm text-blue-300">
                 All detected violations will be recorded with timestamps and details. Your instructor can view this report after you submit the test.
               </Text>
             </View>
 
-            <View className={`mt-4 p-4 rounded-xl ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
-              <Text className={`text-sm font-semibold mb-2 ${isDark ? 'text-green-200' : 'text-green-800'}`}>
+            <View className="mt-4 p-4 rounded-xl bg-green-500/20">
+              <Text className="text-sm font-semibold mb-2 text-green-200">
                 ✅ Best Practices
               </Text>
-              <Text className={`text-sm ${isDark ? 'text-green-300' : 'text-green-700'}`}>
+              <Text className="text-sm text-green-300">
                 • Stay on this page throughout the test{'\n'}
-                • Don't switch apps or windows{'\n'}
-                • Don't take screenshots{'\n'}
+                • Don&apos;t switch apps or windows{'\n'}
+                • Don&apos;t take screenshots{'\n'}
                 • Complete the test in one sitting{'\n'}
                 • Ask your instructor if you need help
               </Text>
@@ -167,7 +164,7 @@ export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: An
           </ScrollView>
 
           {/* Footer */}
-          <View className={`p-6 border-t ${isDark ? 'border-gray-800 bg-gray-900/50' : 'border-gray-200 bg-gray-50'}`}>
+          <View className="p-6 border-t border-border bg-muted">
             <Pressable
               onPress={() => setAcceptedTerms(!acceptedTerms)}
               className="flex-row items-center mb-4"
@@ -176,12 +173,12 @@ export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: An
                 className={`w-6 h-6 rounded border-2 mr-3 items-center justify-center ${
                   acceptedTerms 
                     ? 'bg-green-500 border-green-500' 
-                    : isDark ? 'border-gray-600' : 'border-gray-300'
+                    : 'border-border'
                 }`}
               >
                 {acceptedTerms && <CheckCircle2 size={16} color="white" />}
               </View>
-              <Text className={`flex-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              <Text className="flex-1 text-sm text-foreground">
                 I understand and accept these anti-cheating rules. I agree to maintain academic integrity throughout this test.
               </Text>
             </Pressable>
@@ -189,9 +186,9 @@ export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: An
             <View className="flex-row gap-3">
               <Pressable
                 onPress={onDecline}
-                className={`flex-1 py-4 rounded-xl border-2 ${isDark ? 'border-gray-700' : 'border-gray-300'}`}
+                className="flex-1 py-4 rounded-xl border-2 border-border"
               >
-                <Text className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <Text className="text-center font-semibold text-foreground">
                   Cancel
                 </Text>
               </Pressable>
@@ -202,11 +199,11 @@ export function AntiCheatWarning({ visible, onAccept, onDecline, testTitle }: An
                 className={`flex-1 py-4 rounded-xl ${
                   acceptedTerms
                     ? 'bg-green-500'
-                    : isDark ? 'bg-gray-800' : 'bg-gray-300'
+                    : 'bg-muted'
                 }`}
               >
                 <Text className={`text-center font-semibold ${
-                  acceptedTerms ? 'text-white' : isDark ? 'text-gray-600' : 'text-gray-500'
+                  acceptedTerms ? 'text-white' : 'text-muted-foreground'
                 }`}>
                   I Accept - Start Test
                 </Text>

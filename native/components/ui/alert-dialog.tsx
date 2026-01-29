@@ -2,33 +2,104 @@ import { buttonTextVariants, buttonVariants } from '@/components/ui/button';
 import { NativeOnlyAnimatedView } from '@/components/ui/native-only-animated-view';
 import { TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
-import * as AlertDialogPrimitive from '@rn-primitives/alert-dialog';
 import * as React from 'react';
-import { Platform, View, type ViewProps } from 'react-native';
-import { FadeIn, FadeOut } from 'react-native-reanimated';
+import {
+  Platform,
+  View,
+  Modal,
+  Pressable,
+  Text as RNText,
+  type ViewProps,
+  type PressableProps,
+  type TextProps as RNTextProps
+} from 'react-native';
+import { FadeOut, ZoomIn } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
 
-const AlertDialog = AlertDialogPrimitive.Root;
+// Context for AlertDialog state management
+interface AlertDialogContextValue {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
-const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
+const AlertDialogContext = React.createContext<AlertDialogContextValue | undefined>(undefined);
 
-const AlertDialogPortal = AlertDialogPrimitive.Portal;
+function useAlertDialog() {
+  const context = React.useContext(AlertDialogContext);
+  if (!context) {
+    throw new Error('AlertDialog components must be used within AlertDialog');
+  }
+  return context;
+}
+
+// Root component
+interface AlertDialogProps {
+  children: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+function AlertDialog({ children, open: controlledOpen, onOpenChange }: AlertDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+  const handleOpenChange = React.useCallback((newOpen: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    } else {
+      setUncontrolledOpen(newOpen);
+    }
+  }, [onOpenChange]);
+
+  return (
+    <AlertDialogContext.Provider value={{ open, onOpenChange: handleOpenChange }}>
+      {children}
+    </AlertDialogContext.Provider>
+  );
+}
+
+// Trigger component
+interface AlertDialogTriggerProps extends PressableProps {
+  asChild?: boolean;
+}
+
+function AlertDialogTrigger({ children, asChild, ...props }: AlertDialogTriggerProps) {
+  const { onOpenChange } = useAlertDialog();
+
+  return (
+    <Pressable onPress={() => onOpenChange(true)} {...props}>
+      {children}
+    </Pressable>
+  );
+}
+
+// Portal component (passthrough for web, renders children directly)
+interface AlertDialogPortalProps {
+  children: React.ReactNode;
+  hostName?: string;
+}
+
+function AlertDialogPortal({ children }: AlertDialogPortalProps) {
+  return <>{children}</>;
+}
 
 const FullWindowOverlay = Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
+
+// Overlay component
+interface AlertDialogOverlayProps extends ViewProps {
+  forceMount?: boolean;
+}
 
 function AlertDialogOverlay({
   className,
   children,
   ...props
-}: Omit<AlertDialogPrimitive.OverlayProps, 'asChild'> &
-  React.RefAttributes<AlertDialogPrimitive.OverlayRef> & {
-    children?: React.ReactNode;
-  }) {
+}: AlertDialogOverlayProps) {
   return (
     <FullWindowOverlay>
-      <AlertDialogPrimitive.Overlay
+      <Pressable
         className={cn(
-          'absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/50 p-2 ',
+          'absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/50 p-2',
           Platform.select({
             web: 'animate-in fade-in-0 fixed',
           }),
@@ -36,37 +107,59 @@ function AlertDialogOverlay({
         )}
         {...props}>
         <NativeOnlyAnimatedView
-          entering={FadeIn.duration(200).delay(50)}
+          entering={ZoomIn.duration(100).withInitialValues({ transform: [{ scale: 0.90 }] })}
           exiting={FadeOut.duration(150)}>
           <>{children}</>
         </NativeOnlyAnimatedView>
-      </AlertDialogPrimitive.Overlay>
+      </Pressable>
     </FullWindowOverlay>
   );
+}
+
+// Content component
+interface AlertDialogContentProps extends ViewProps {
+  portalHost?: string;
+  onClose?: () => void;
 }
 
 function AlertDialogContent({
   className,
   portalHost,
+  children,
+  onClose,
   ...props
-}: AlertDialogPrimitive.ContentProps &
-  React.RefAttributes<AlertDialogPrimitive.ContentRef> & {
-    portalHost?: string;
-  }) {
+}: AlertDialogContentProps) {
+  const { open, onOpenChange } = useAlertDialog();
+
+  if (!open) return null;
+
   return (
     <AlertDialogPortal hostName={portalHost}>
-      <AlertDialogOverlay>
-        <AlertDialogPrimitive.Content
-          className={cn(
-            'bg-background border-border w-screen z-50 flex flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5 max-w-lg',
-            Platform.select({
-              web: 'animate-in fade-in-0 zoom-in-95 duration-200',
-            }),
-            className
-          )}
-          {...props}
-        />
-      </AlertDialogOverlay>
+      <Modal
+        visible={open}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => {
+          onClose?.();
+          onOpenChange(false);
+        }}>
+        <AlertDialogOverlay>
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View
+              className={cn(
+                'bg-background border-border w-screen z-50 flex flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5 max-w-sm sm:max-w-lg',
+                Platform.select({
+                  web: 'animate-in fade-in-0 zoom-in-95 duration-200',
+                }),
+                className
+              )}
+              {...props}>
+              {children}
+            </View>
+          </Pressable>
+        </AlertDialogOverlay>
+      </Modal>
     </AlertDialogPortal>
   );
 }
@@ -88,52 +181,96 @@ function AlertDialogFooter({ className, ...props }: ViewProps) {
   );
 }
 
+// Title component
+interface AlertDialogTitleProps extends RNTextProps {
+  children: React.ReactNode;
+}
+
 function AlertDialogTitle({
   className,
   ...props
-}: AlertDialogPrimitive.TitleProps & React.RefAttributes<AlertDialogPrimitive.TitleRef>) {
+}: AlertDialogTitleProps) {
   return (
-    <AlertDialogPrimitive.Title
+    <RNText
       className={cn('text-foreground text-lg font-semibold', className)}
       {...props}
     />
   );
 }
 
+// Description component
+interface AlertDialogDescriptionProps extends RNTextProps {
+  children: React.ReactNode;
+}
+
 function AlertDialogDescription({
   className,
   ...props
-}: AlertDialogPrimitive.DescriptionProps &
-  React.RefAttributes<AlertDialogPrimitive.DescriptionRef>) {
+}: AlertDialogDescriptionProps) {
   return (
-    <AlertDialogPrimitive.Description
+    <RNText
       className={cn('text-muted-foreground text-sm', className)}
       {...props}
     />
   );
 }
 
+// Action component
+interface AlertDialogActionProps extends PressableProps {
+  asChild?: boolean;
+}
+
 function AlertDialogAction({
   className,
+  children,
+  onPress,
   ...props
-}: AlertDialogPrimitive.ActionProps & React.RefAttributes<AlertDialogPrimitive.ActionRef>) {
+}: AlertDialogActionProps) {
+  const { onOpenChange } = useAlertDialog();
+
+  const handlePress = React.useCallback((e: any) => {
+    onPress?.(e);
+    onOpenChange(false);
+  }, [onPress, onOpenChange]);
+
   return (
     <TextClassContext.Provider value={buttonTextVariants({ className })}>
-      <AlertDialogPrimitive.Action className={cn(buttonVariants(), className)} {...props} />
+      <Pressable
+        className={cn(buttonVariants(), className)}
+        onPress={handlePress}
+        {...props}>
+        {children}
+      </Pressable>
     </TextClassContext.Provider>
   );
 }
 
+// Cancel component
+interface AlertDialogCancelProps extends PressableProps {
+  asChild?: boolean;
+}
+
 function AlertDialogCancel({
   className,
+  children,
+  onPress,
   ...props
-}: AlertDialogPrimitive.CancelProps & React.RefAttributes<AlertDialogPrimitive.CancelRef>) {
+}: AlertDialogCancelProps) {
+  const { onOpenChange } = useAlertDialog();
+
+  const handlePress = React.useCallback((e: any) => {
+    onPress?.(e);
+    onOpenChange(false);
+  }, [onPress, onOpenChange]);
+
   return (
     <TextClassContext.Provider value={buttonTextVariants({ className, variant: 'outline' })}>
-      <AlertDialogPrimitive.Cancel
+      <Pressable
         className={cn(buttonVariants({ variant: 'outline' }), className)}
-        {...props}
-      />
+        onPress={handlePress}
+        {...props}>
+        {children}
+      </Pressable>
     </TextClassContext.Provider>
   );
 }

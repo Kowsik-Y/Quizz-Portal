@@ -1,15 +1,12 @@
 // Skeleton Loading Components
-// Beautiful skeleton screens for better loading UX
 
-import React from 'react';
-import { View } from 'react-native';
+import { View, Platform, useWindowDimensions } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withRepeat,
   withSequence,
   withTiming,
   useSharedValue,
-  withDelay,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
 
@@ -38,7 +35,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       -1,
       true
     );
-  }, []);
+  }, [opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -65,7 +62,7 @@ export const TestCardSkeleton: React.FC = () => {
   return (
     <View className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-3 shadow-sm">
       {/* Header */}
-      <View className="flex-row justify-between items-center mb-3">
+      <View className="flex-row justify-between items-center mb-3 ">
         <Skeleton width="70%" height={20} borderRadius={4} />
         <Skeleton width={60} height={24} borderRadius={12} />
       </View>
@@ -84,18 +81,18 @@ export const TestCardSkeleton: React.FC = () => {
 };
 
 // Course Card Skeleton
-export const CourseCardSkeleton: React.FC = () => {
+export const CourseCardSkeleton: React.FC = ({ ...props }) => {
   return (
-    <View className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-3 shadow-sm">
+    <View className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-3 gap-3"  >
       {/* Image placeholder */}
-      <Skeleton width="100%" height={120} borderRadius={8} className="mb-3" />
+      <Skeleton width="100%" height={120} borderRadius={8} />
 
       {/* Title */}
-      <Skeleton width="90%" height={18} borderRadius={4} className="mb-2" />
+      <Skeleton width="90%" height={18} borderRadius={4} />
 
       {/* Description */}
-      <Skeleton width="100%" height={12} borderRadius={4} className="mb-1" />
-      <Skeleton width="70%" height={12} borderRadius={4} className="mb-3" />
+      <Skeleton width="100%" height={12} borderRadius={4} />
+      <Skeleton width="70%" height={12} borderRadius={4} />
 
       {/* Stats */}
       <View className="flex-row justify-between">
@@ -197,8 +194,8 @@ export const SearchBarSkeleton: React.FC = () => {
 };
 
 // Button Skeleton
-export const ButtonSkeleton: React.FC<{ width?: number | string }> = ({ 
-  width = '100%' 
+export const ButtonSkeleton: React.FC<{ width?: number | string }> = ({
+  width = '100%'
 }) => {
   return <Skeleton width={width} height={48} borderRadius={8} />;
 };
@@ -207,6 +204,11 @@ export const ButtonSkeleton: React.FC<{ width?: number | string }> = ({
 export const FullPageSkeleton: React.FC<{
   variant?: 'list' | 'profile' | 'dashboard' | 'test';
 }> = ({ variant = 'list' }) => {
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const isLargeScreen = width >= 1024;
+  const isMediumScreen = width >= 768;
+
   if (variant === 'profile') {
     return (
       <View className="flex-1 p-4">
@@ -235,12 +237,24 @@ export const FullPageSkeleton: React.FC<{
 
   if (variant === 'test') {
     return (
-      <View className="flex-1 p-4">
-        <Skeleton width="100%" height={60} borderRadius={8} className="mb-4" />
-        <QuestionSkeleton />
-        <View className="flex-row justify-between">
-          <ButtonSkeleton width="48%" />
-          <ButtonSkeleton width="48%" />
+      <View  className='flex-1 sm:px-8 px-4'>
+        <View
+          className="flex-row flex-wrap"
+          style={{
+            gap: 12,
+            justifyContent: isWeb ? 'flex-start' : 'center'
+          }}
+        >
+          {[...Array(6).keys()].map((i: number) => (
+            <View
+              key={i}
+              style={{
+                width: isWeb ? (isLargeScreen ? '32%' : isMediumScreen ? '48.5%' : '100%') : '100%'
+              }}
+            >
+              <CourseCardSkeleton />
+            </View>
+          ))}
         </View>
       </View>
     );

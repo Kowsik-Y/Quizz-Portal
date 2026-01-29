@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Platform, useWindowDimensions, Pressable, AppState } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { questionAPI, attemptAPI, codeAPI, testAPI } from '@/lib/api';
 import { Flag, Play, CheckCircle, XCircle, Shield } from 'lucide-react-native';
@@ -17,7 +18,7 @@ interface Question {
   question_text: string;
   question_type: 'mcq' | 'code' | 'theory';
   options?: string[] | string; // Can be array or JSON string
-  test_cases?: Array<{ input: string; expected_output: string }> | string;
+  test_cases?: { input: string; expected_output: string }[] | string;
   points: number;
   order_number: number;
 }
@@ -708,7 +709,7 @@ export default function TakeTestScreen() {
 
         {/* Fullscreen Warning Banner - Web Only */}
         {isWeb && antiCheatEnabled && exitedFullscreen && !isFullscreen && (
-          <Pressable
+          <Button
             onPress={async () => {
               try {
                 if (Platform.OS === 'web') {
@@ -721,7 +722,8 @@ export default function TakeTestScreen() {
                 showAlert('Error', 'Failed to enter fullscreen mode');
               }
             }}
-            className="bg-red-500 px-4 py-3 flex-row items-center justify-between active:bg-red-600"
+            variant="destructive"
+            className="px-4 py-3 flex-row items-center justify-between"
           >
             <View className="flex-row items-center flex-1">
               <Shield size={24} color="white" />
@@ -734,7 +736,7 @@ export default function TakeTestScreen() {
                 </Text>
               </View>
             </View>
-          </Pressable>
+          </Button>
         )}
 
         {/* Question Content */}

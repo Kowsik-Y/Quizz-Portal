@@ -1,5 +1,6 @@
 import { View, ScrollView, TextInput, Pressable, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, Building2 } from 'lucide-react-native';
@@ -121,15 +122,15 @@ export default function DepartmentsManagementPage() {
           </View>
           
           {!showAddForm && (
-            <Pressable
+            <Button
               onPress={() => setShowAddForm(true)}
-              className={`flex-row items-center px-4 py-2 rounded-lg ${
-                isDark ? 'bg-blue-600' : 'bg-blue-500'
-              }`}
+              variant="default"
             >
-              <Plus size={20} color="#fff" />
-              <Text className="text-white ml-2 font-semibold">Add Department</Text>
-            </Pressable>
+              <View className="flex-row items-center">
+                <Plus size={20} color="#fff" />
+                <Text className="text-white ml-2 font-semibold">Add Department</Text>
+              </View>
+            </Button>
           )}
         </View>
       </View>
@@ -204,27 +205,25 @@ export default function DepartmentsManagementPage() {
 
             {/* Buttons */}
             <View className="flex-row gap-3">
-              <Pressable
+              <Button
                 onPress={handleSubmit}
-                className={`flex-1 py-3 rounded-lg ${isDark ? 'bg-blue-600' : 'bg-blue-500'}`}
+                variant="default"
+                className="flex-1"
               >
-                <Text className="text-white text-center font-semibold">
+                <Text className="text-white font-semibold">
                   {editingId ? 'Update' : 'Create'}
                 </Text>
-              </Pressable>
+              </Button>
               
-              <Pressable
+              <Button
                 onPress={handleCancel}
-                className={`flex-1 py-3 rounded-lg border ${
-                  isDark ? 'border-gray-600' : 'border-gray-300'
-                }`}
+                variant="outline"
+                className="flex-1"
               >
-                <Text className={`text-center font-semibold ${
-                  isDark ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+                <Text className="font-semibold">
                   Cancel
                 </Text>
-              </Pressable>
+              </Button>
             </View>
           </View>
         )}
@@ -273,19 +272,21 @@ export default function DepartmentsManagementPage() {
                 </View>
 
                 <View className="flex-row gap-2 ml-3">
-                  <Pressable
+                  <Button
                     onPress={() => handleEdit(department)}
-                    className={`p-2 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
+                    variant="secondary"
+                    size="icon"
                   >
                     <Edit size={18} color={isDark ? '#60a5fa' : '#3b82f6'} />
-                  </Pressable>
+                  </Button>
                   
-                  <Pressable
+                  <Button
                     onPress={() => handleDelete(department.id, department.name)}
-                    className={`p-2 rounded-lg ${isDark ? 'bg-red-900/20' : 'bg-red-50'}`}
+                    variant="destructive"
+                    size="icon"
                   >
-                    <Trash2 size={18} color={isDark ? '#f87171' : '#ef4444'} />
-                  </Pressable>
+                    <Trash2 size={18} color="#ffffff" />
+                  </Button>
                 </View>
               </View>
             </View>

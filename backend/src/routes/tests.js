@@ -3,9 +3,9 @@ const router = express.Router();
 const testController = require('../controllers/testController');
 const { auth, checkRole } = require('../middleware/auth');
 
-// Get all tests
-router.get('/', testController.getAllTests);
-router.get('/:id', testController.getTestById);
+// Get all tests (protected - requires auth to get user_attempts data)
+router.get('/', auth, testController.getAllTests);
+router.get('/:id', auth, testController.getTestById);
 
 // Protected routes
 router.post('/', auth, checkRole('teacher', 'admin'), testController.createTest);

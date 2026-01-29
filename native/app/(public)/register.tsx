@@ -111,7 +111,7 @@ function AdminCreateUserForm() {
         setSelectedDept(response.data.departments[0]);
       }
     } catch (error) {
-      showAlert('Error', 'Failed to load departments');
+      showAlert('Error', 'Failed to load departments. Please try again later.');
     }
   };
 
@@ -201,19 +201,17 @@ function AdminCreateUserForm() {
               <Text className="text-sm font-semibold mb-2 text-foreground">User Role *</Text>
               <View className="flex-row gap-2">
                 {(['admin', 'teacher', 'student'] as const).map((role) => (
-                  <Pressable
+                  <Button
                     key={role}
                     onPress={() => setFormData(prev => ({ ...prev, role }))}
-                    className={`flex-1 py-3 rounded-xl border ${formData.role === role
-                        ? 'bg-primary border-primary'
-                        : isWeb ? 'bg-secondary/50 border-border' : 'bg-secondary border-border'
-                      }`}
+                    variant={formData.role === role ? 'default' : 'outline'}
+                    className="flex-1"
                   >
                     <Text className={`text-center font-semibold capitalize ${formData.role === role ? 'text-white' : 'text-foreground'
                       }`}>
                       {role}
                     </Text>
-                  </Pressable>
+                  </Button>
                 ))}
               </View>
             </View>
@@ -326,9 +324,12 @@ function AdminCreateUserForm() {
 
             {/* Back to Home Link */}
             <View className="flex-row justify-center items-center mt-4">
-              <Pressable onPress={() => router.replace('/(protected)/(tabs)/home')}>
+              <Button 
+                onPress={() => router.replace('/(protected)/(tabs)/home')}
+                variant="ghost"
+              >
                 <Text className="text-primary font-semibold">← Back to Dashboard</Text>
-              </Pressable>
+              </Button>
             </View>
 
             {/* Role Detection Guide */}

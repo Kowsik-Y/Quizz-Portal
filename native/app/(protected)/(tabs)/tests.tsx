@@ -1,20 +1,18 @@
-import { View, ScrollView, Pressable, TextInput, Platform, Dimensions, RefreshControl } from 'react-native';
+import { View, ScrollView, Platform, Dimensions, RefreshControl } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { Search, Clock, BookOpen,  FileText, Calendar, PlayCircle, AlertCircle } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { Search } from 'lucide-react-native';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTestStore } from '@/stores/testStore';
 import { LoadingState } from '@/components/LoadingState';
-import { showToast } from '@/lib/toast';
+import { TestCard } from '@/components/TestCard';
+import { TabButton } from '@/components/ui/tab-button';
+import { TestFilters } from '@/components/TestFilters';
+import { Input } from '@/components';
 
 export default function TestsPage() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'available' | 'completed'>('available');
   const isWeb = Platform.OS === 'web';
-  const router = useRouter();
 
   const tests = useTestStore(state => state.tests);
   const bookings = useTestStore(state => state.bookings);
@@ -27,14 +25,16 @@ export default function TestsPage() {
 
   const screenWidth = Dimensions.get('window').width;
   const isLargeScreen = screenWidth > 768;
-  const numColumns = isWeb ? (isLargeScreen ? 3 : 2) : 1;
+  const isMediumScreen = screenWidth > 640 && screenWidth <= 768;
+  const numColumns = isWeb ? (isLargeScreen ? 3 : isMediumScreen ? 2 : 1) : 1;
 
+
+  const [typeFilter, setTypeFilter] = useState<'all' | 'instant' | 'booking' | 'timed' | 'booked'>('all');
 
   useEffect(() => {
     fetchTests();
     fetchMyBookings();
   }, [fetchTests, fetchMyBookings]);
-  const [typeFilter, setTypeFilter] = useState<'all' | 'instant' | 'booking' | 'timed' | 'booked'>('all');
 
   const getTestType = (test: any) => {
     const t = test.test_type || test.type || test.mode || test.testType || test.mode_type;
@@ -45,28 +45,59 @@ export default function TestsPage() {
     return 'timed';
   };
 
-  // Check if test can be taken (uses normalized type and bookings)
-  const canTakeTest = (test: any) => {
+  // Check if test can be taken
+  const canTakeTest = useCallback((test: any) => {
     if (!test.is_active) return false;
+
+    // CRITICAL: Check if user has reached max attempts - if yes, test CANNOT be taken
+    if (test.max_attempts && test.user_attempts !== undefined && test.user_attempts !== null) {
+      const maxAttempts = Number(test.max_attempts);
+      const userAttempts = Number(test.user_attempts);
+
+      if (userAttempts >= maxAttempts) {
+        console.log(`❌ Cannot take test "${test.title}" - Max attempts reached:`, {
+          userAttempts,
+          maxAttempts
+        });
+        return false;
+      }
+    }
+
     const tType = getTestType(test);
     if (String(tType).toLowerCase() === 'instant') return true;
     if (String(tType).toLowerCase() === 'booking') {
-      // user can take if they have a non-cancelled booking for this test
       return bookings.some((b: any) => (b.test_id === test.id || b.test?.id === test.id) && b.status !== 'cancelled');
     }
-    // timed tests are available if active
     return true;
-  };
+  }, [bookings]);
 
   // Check if test is completed (reached maximum attempts)
-  const isTestCompleted = (test: any) => {
-    // If test has max_attempts defined and user cannot take the test, it's completed
-    return test.max_attempts && !canTakeTest(test);
-  };
+  const isTestCompleted = useCallback((test: any) => {
+    // If test has max_attempts defined and user_attempts data is available
+    if (test.max_attempts && test.user_attempts !== undefined && test.user_attempts !== null) {
+      const maxAttempts = Number(test.max_attempts);
+      const userAttempts = Number(test.user_attempts);
+      const isCompleted = userAttempts >= maxAttempts;
 
-  // Filter tests based on search and type filter
-  const filteredTests = Array.isArray(tests)
-    ? tests.filter(test => {
+      if (isCompleted) {
+        console.log(`✅ Test "${test.title}" is COMPLETED:`, {
+          userAttempts,
+          maxAttempts,
+          remaining: maxAttempts - userAttempts
+        });
+      }
+
+      return isCompleted;
+    }
+
+    return false;
+  }, []);
+
+  // Filter tests based on search and type filter (memoized for performance)
+  const filteredTests = useMemo(() => {
+    if (!Array.isArray(tests)) return [];
+
+    return tests.filter(test => {
       const q = searchQuery.toLowerCase();
       const matchesSearch =
         test.title?.toLowerCase().includes(q) ||
@@ -86,229 +117,36 @@ export default function TestsPage() {
 
       const tType = getTestType(test);
       return String(tType).toLowerCase() === typeFilter;
-    })
-    : [];
-
-  const TabButton = ({ title, isActive, onPress }: any) => (
-    <Pressable
-      onPress={onPress}
-      className={`flex-1 py-3 rounded-lg ${isActive
-        ? 'bg-blue-500'
-        : isDark
-          ? 'bg-gray-800'
-          : 'bg-gray-100'
-        }`}
-    >
-      <Text
-        className={`text-center font-semibold ${isActive ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-600'
-          }`}
-      >
-        {title}
-      </Text>
-    </Pressable>
-  );
-
-  const TestCard = ({ test }: any) => {
-    const isCompleted = isTestCompleted(test);
-    const score = 0;
-    const testCanBeTaken = canTakeTest(test);
-    const maxAttemptsReached = test.max_attempts && !testCanBeTaken;    return (
-      <Pressable
-        onPress={() => router.push(`/tests/test-details?id=${test.id}` as any)}
-        className={`rounded-xl p-5 mb-4 ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-          }`}
-        style={{
-          width: isWeb
-            ? numColumns === 3
-              ? '32%'
-              : '100%'
-            : '100%',
-        }}
-      >
-        <View className="flex-row items-start justify-between mb-3">
-          <View className="flex-1">
-            <Text
-              className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
-              numberOfLines={2}
-            >
-              {test.title}
-            </Text>
-            <Text
-              className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
-              numberOfLines={2}
-            >
-              {test.description}
-            </Text>
-          </View>
-          {maxAttemptsReached && (
-            <View className="bg-orange-500 rounded-full px-3 py-1 ml-2">
-              <Text className="text-white font-semibold text-xs">Max Attempts</Text>
-            </View>
-          )}
-          {!test.is_active && (
-            <View className="bg-red-500 rounded-full px-3 py-1 ml-2">
-              <Text className="text-white font-semibold text-xs">Inactive</Text>
-            </View>
-          )}
-        </View>
-
-        <View className="flex-row items-center gap-4 mb-4">
-          <View className="flex-row items-center">
-            <BookOpen size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-            <Text className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {test.question_count || 0} questions
-            </Text>
-          </View>
-          <View className="flex-row items-center">
-            <Clock size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-            <Text className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {test.duration_minutes} min
-            </Text>
-          </View>
-        </View>
-
-        {/* Type Badge */}
-        <View className="mb-3">
-          {(() => {
-            const tt = String(getTestType(test)).toLowerCase();
-            return (
-              <View className={`self-start px-3 py-1 rounded-full ${tt === 'instant' ? 'bg-green-100' : tt === 'booking' ? 'bg-blue-100' : 'bg-yellow-100'}`}>
-                <Text className={`text-xs font-semibold ${tt === 'instant' ? 'text-green-700' : tt === 'booking' ? 'text-blue-700' : 'text-yellow-700'}`}>
-                  {tt === 'instant' ? '⚡ Instant' : tt === 'booking' ? '📅 Booking Required' : '⏰ Timed'}
-                </Text>
-              </View>
-            );
-          })()}
-        </View>
-
-        {/* Action Buttons */}
-        <View className="gap-2 mb-3">
-          {/* Materials Button */}
-          <Pressable
-            onPress={(e: any) => {
-              e?.stopPropagation?.();
-              router.push(`/courses/course-details?id=${test.course_id}` as any);
-            }}
-            className={`flex-row items-center justify-center py-2.5 rounded-lg ${isDark ? 'bg-blue-900/30 border border-blue-700' : 'bg-blue-50 border border-blue-200'
-              }`}
-          >
-            <FileText size={16} color={isDark ? '#60a5fa' : '#3b82f6'} />
-            <Text className={`ml-2 font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-              Materials
-            </Text>
-          </Pressable>
-
-          {/* Book Slot Button - Only for booking type tests */}
-          {String(getTestType(test)).toLowerCase() === 'booking' && (
-            <Pressable
-              onPress={(e: any) => {
-                e?.stopPropagation?.();
-                router.push(`/tests/book-test?id=${test.id}` as any);
-              }}
-              className={`flex-row items-center justify-center py-2.5 rounded-lg ${isDark ? 'bg-purple-900/30 border border-purple-700' : 'bg-purple-50 border border-purple-200'
-                }`}
-            >
-              <Calendar size={16} color={isDark ? '#c084fc' : '#9333ea'} />
-              <Text className={`ml-2 font-semibold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-                Book Slot
-              </Text>
-            </Pressable>
-          )}
-        </View>
-
-        {/* Take Test / Review Buttons */}
-        <View className="flex-row gap-2">
-          {maxAttemptsReached ? (
-            <View className="flex-1">
-              <View className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-2">
-                <Text className={`text-sm font-medium ${isDark ? 'text-orange-300' : 'text-orange-800'} mb-1`}>
-                  Maximum Attempts Reached
-                </Text>
-                <Text className={`text-xs ${isDark ? 'text-orange-200' : 'text-orange-700'}`}>
-                  You have reached the maximum number of attempts ({test.max_attempts}) for this test
-                </Text>
-              </View>
-              <Pressable
-                onPress={(e: any) => {
-                  e?.stopPropagation?.();
-                  router.push(`/tests/test-details?id=${test.id}` as any);
-                }}
-                className="flex-1 bg-blue-500 rounded-lg py-3"
-              >
-                <Text className="text-white font-semibold text-center">View Reports</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <Pressable
-              onPress={(e: any) => {
-                e?.stopPropagation?.();
-                if (!test.is_active) {
-                  showToast.error('This test is currently not active', { title: 'Test Inactive' });
-                  return;
-                }
-                if (testCanBeTaken) {
-                  router.push(`/tests/take-test?id=${test.id}` as any);
-                } else if (test.test_type === 'booking') {
-                  showToast.warning('Please book a slot first', { title: 'Booking Required' });
-                  router.push(`/tests/book-test?id=${test.id}` as any);
-                } else {
-                  showToast.error('Test is not available at this time', { title: 'Cannot Take Test' });
-                }
-              }}
-              disabled={!test.is_active}
-              className={`flex-1 rounded-lg py-3 flex-row items-center justify-center ${testCanBeTaken && test.is_active ? 'bg-green-500' : 'bg-gray-400'
-                }`}
-            >
-              {testCanBeTaken && test.is_active ? (
-                <>
-                  <PlayCircle size={18} color="white" />
-                  <Text className="text-white font-semibold text-center ml-2">Take Test</Text>
-                </>
-              ) : (
-                <>
-                  <AlertCircle size={18} color="white" />
-                  <Text className="text-white font-semibold text-center ml-2">
-                    {!test.is_active ? 'Inactive' : 'Book Slot'}
-                  </Text>
-                </>
-              )}
-            </Pressable>
-          )}
-        </View>
-      </Pressable>
-    );
-  };
+    });
+  }, [tests, searchQuery, activeTab, typeFilter, bookings, isTestCompleted]);
 
   return (
-    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <View className="flex-1 bg-background">
       <View className={`${isWeb ? 'px-8 pt-8' : 'px-4 pt-6'} pb-4`}>
-        <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        <Text className="text-3xl font-bold text-foreground">
           Tests
         </Text>
-        <Text className={`mt-1 text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+        <Text className="mt-1 text-base text-muted-foreground">
           Browse and take tests
         </Text>
       </View>
 
       {/* Search Bar */}
-      <View className={isWeb ? 'px-8 mb-4' : 'px-4 mb-4'}>
-        <View
-          className={`flex-row items-center px-4 py-1 sm:py-3 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'
-            } border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
-        >
-          <Search size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
-          <TextInput
-            placeholder="Search tests..."
-            placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            className={`flex-1 ml-3 text-base ${isDark ? 'text-white' : 'text-gray-900'}`}
-          />
-        </View>
+      <View className='px-4 mb-4 sm:px-8 sm:mb-6'>
+        <Input
+          leftIcon={Search}
+          placeholder="Search tests..."
+          placeholderTextColor="#6b7280"
+          value={searchQuery}
+          iconColor='#6b7280'
+          onChangeText={setSearchQuery}
+
+          className="text-sm sm:text-base text-foreground rounded-lg bg-card border border-border"
+        />
       </View>
 
       {/* Tabs */}
-      <View className={isWeb ? 'px-8 mb-4' : 'px-4 mb-4'}>
+      <View className='px-4 mb-3 sm:px-8 sm:mb-4 '>
         <View className="flex-row gap-2 mb-4">
           <TabButton
             title="Available"
@@ -323,23 +161,7 @@ export default function TestsPage() {
         </View>
 
         {/* Type filters */}
-        <View className="flex-row gap-2 mt-3">
-          {[
-            { key: 'all', label: 'All' },
-            { key: 'instant', label: 'Instant' },
-            { key: 'booking', label: 'Booking' },
-            { key: 'timed', label: 'Timed' },
-            { key: 'booked', label: 'Booked' },
-          ].map(f => (
-            <Pressable
-              key={f.key}
-              onPress={() => setTypeFilter(f.key as any)}
-              className={`px-3 py-2 rounded-lg ${typeFilter === f.key ? 'bg-blue-500' : isDark ? 'bg-gray-800' : 'bg-gray-100'}`}
-            >
-              <Text className={`${typeFilter === f.key ? 'text-white' : isDark ? 'text-gray-300' : 'text-gray-700'} font-semibold`}>{f.label}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <TestFilters activeFilter={typeFilter} onFilterChange={setTypeFilter} />
       </View>
 
       {/* Test List with Loading States */}
@@ -350,10 +172,10 @@ export default function TestsPage() {
         emptyMessage={activeTab === 'available' ? "No available tests" : "No completed tests"}
         emptyIcon="filter-outline"
         onRetry={fetchTests}
-        skeleton="list"
+        skeleton="test"
       >
         <ScrollView
-          className={`flex-1 ${isWeb ? 'px-4' : 'px-2'}`}
+          className={`flex-1 ${isWeb ? 'px-4 dark' : 'px-2'}`}
           contentContainerStyle={{
             paddingBottom: isWeb && isLargeScreen ? 32 : 90, // Extra padding for bottom nav on mobile
           }}
@@ -362,15 +184,50 @@ export default function TestsPage() {
           }
         >
           <View
-            className="flex-row flex-wrap"
-            style={{
+            className={isWeb ? "flex-row flex-wrap drak" : "w-full"}
+            style={isWeb ? {
               gap: 12,
-              justifyContent: isWeb ? 'flex-start' : 'center'
-            }}
+              justifyContent: 'flex-start'
+            } : undefined}
           >
-            {filteredTests.map((test) => (
-              <TestCard key={test.id} test={test} />
-            ))}
+            {filteredTests.map((test) => {
+              const isCompleted = isTestCompleted(test);
+              const testCanBeTaken = canTakeTest(test);
+              // Check max attempts: either from user_attempts or canTakeTest logic
+              const maxAttemptsReached = Boolean(
+                test.max_attempts && (
+                  (test.user_attempts !== undefined && test.user_attempts >= test.max_attempts) ||
+                  !testCanBeTaken
+                )
+              );
+              const testType = getTestType(test);
+
+              // Debug logging for first test
+              if (filteredTests.indexOf(test) === 0) {
+                console.log('Test debug:', {
+                  id: test.id,
+                  title: test.title,
+                  max_attempts: test.max_attempts,
+                  user_attempts: test.user_attempts,
+                  isCompleted,
+                  testCanBeTaken,
+                  maxAttemptsReached,
+                  activeTab
+                });
+              }
+
+              return (
+                <TestCard
+                  key={test.id}
+                  test={test}
+                  canTakeTest={testCanBeTaken}
+                  isCompleted={isCompleted}
+                  maxAttemptsReached={maxAttemptsReached}
+                  testType={String(testType).toLowerCase()}
+                  numColumns={numColumns}
+                />
+              );
+            })}
           </View>
         </ScrollView>
       </LoadingState>

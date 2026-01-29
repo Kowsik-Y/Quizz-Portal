@@ -44,58 +44,66 @@ const autocompleteSuggestions: Record<string, string[]> = {
   ]
 };
 
-// Syntax highlighting patterns
-const syntaxPatterns: Record<string, { pattern: RegExp; color: string; name: string }[]> = {
+// Syntax highlighting patterns for each language
+const syntaxPatterns: Record<string, { pattern: string; color: string }[]> = {
   javascript: [
-    { pattern: /\b(const|let|var|function|class|if|else|for|while|return|async|await|try|catch|import|export|new|this|typeof|instanceof)\b/g, color: '#ff7b72', name: 'keyword' },
-    { pattern: /(\/\/.*$)/gm, color: '#8b949e', name: 'comment' },
-    { pattern: /(\/\*[\s\S]*?\*\/)/g, color: '#8b949e', name: 'comment' },
-    { pattern: /(['"`])(.*?)\1/g, color: '#a5d6ff', name: 'string' },
-    { pattern: /\b(\d+)\b/g, color: '#79c0ff', name: 'number' },
-    { pattern: /\b(true|false|null|undefined)\b/g, color: '#79c0ff', name: 'boolean' },
-    { pattern: /\b([A-Z][a-zA-Z0-9]*)\b/g, color: '#ffa657', name: 'class' },
-    { pattern: /\b(console|Array|Object|String|Number|Math|JSON|Promise)\b/g, color: '#79c0ff', name: 'builtin' },
+    { pattern: '//.*', color: '#8b949e' },
+    { pattern: '/\\*[\\s\\S]*?\\*/', color: '#8b949e' },
+    { pattern: '\\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|try|catch|finally|throw|new|this|class|extends|import|export|from|async|await|yield|typeof|instanceof|void|delete|in|of)\\b', color: '#ff7b72' },
+    { pattern: '"[^"\\\\]*(\\\\.[^"\\\\]*)*"', color: '#a5d6ff' },
+    { pattern: "'[^'\\\\]*(\\\\.[^'\\\\]*)*'", color: '#a5d6ff' },
+    { pattern: '`[^`\\\\]*(\\\\.[^`\\\\]*)*`', color: '#a5d6ff' },
+    { pattern: '\\b\\d+\\.?\\d*\\b', color: '#79c0ff' },
+    { pattern: '\\b(true|false|null|undefined|NaN|Infinity)\\b', color: '#79c0ff' },
+    { pattern: '\\b(console|Array|Object|String|Number|Boolean|Date|Math|JSON|Promise|Set|Map|WeakSet|WeakMap|Symbol|Error|RegExp)\\b', color: '#d2a8ff' }
   ],
   python: [
-    { pattern: /\b(def|class|if|else|elif|for|while|return|import|from|as|try|except|with|lambda|yield|async|await|pass|break|continue)\b/g, color: '#ff7b72', name: 'keyword' },
-    { pattern: /(#.*$)/gm, color: '#8b949e', name: 'comment' },
-    { pattern: /('''[\s\S]*?'''|"""[\s\S]*?""")/g, color: '#8b949e', name: 'comment' },
-    { pattern: /(['"])(.*?)\1/g, color: '#a5d6ff', name: 'string' },
-    { pattern: /\b(\d+)\b/g, color: '#79c0ff', name: 'number' },
-    { pattern: /\b(True|False|None)\b/g, color: '#79c0ff', name: 'boolean' },
-    { pattern: /\b(self|cls)\b/g, color: '#ffa657', name: 'special' },
-    { pattern: /\b(print|len|range|input|int|str|list|dict|set|tuple)\b/g, color: '#d2a8ff', name: 'builtin' },
+    { pattern: '#.*', color: '#8b949e' },
+    { pattern: '"""[\\s\\S]*?"""', color: '#8b949e' },
+    { pattern: "'''[\\s\\S]*?'''", color: '#8b949e' },
+    { pattern: '\\b(def|class|if|elif|else|for|while|break|continue|return|import|from|as|try|except|finally|raise|with|lambda|yield|async|await|pass|del|global|nonlocal|assert|in|is|not|and|or)\\b', color: '#ff7b72' },
+    { pattern: '"[^"\\\\]*(\\\\.[^"\\\\]*)*"', color: '#a5d6ff' },
+    { pattern: "'[^'\\\\]*(\\\\.[^'\\\\]*)*'", color: '#a5d6ff' },
+    { pattern: '\\b\\d+\\.?\\d*\\b', color: '#79c0ff' },
+    { pattern: '\\b(True|False|None)\\b', color: '#79c0ff' },
+    { pattern: '\\b(print|len|range|str|int|float|list|dict|set|tuple|type|isinstance|enumerate|zip|map|filter|sorted|sum|min|max|abs|round|open|input)\\b', color: '#d2a8ff' }
   ],
   java: [
-    { pattern: /\b(public|private|protected|static|final|class|interface|extends|implements|void|int|boolean|String|if|else|for|while|return|new|this|super|try|catch)\b/g, color: '#ff7b72', name: 'keyword' },
-    { pattern: /(\/\/.*$)/gm, color: '#8b949e', name: 'comment' },
-    { pattern: /(\/\*[\s\S]*?\*\/)/g, color: '#8b949e', name: 'comment' },
-    { pattern: /(".*?")/g, color: '#a5d6ff', name: 'string' },
-    { pattern: /\b(\d+)\b/g, color: '#79c0ff', name: 'number' },
-    { pattern: /\b(true|false|null)\b/g, color: '#79c0ff', name: 'boolean' },
-    { pattern: /\b([A-Z][a-zA-Z0-9]*)\b/g, color: '#ffa657', name: 'class' },
-    { pattern: /\b(System|Math|String|Integer|ArrayList)\b/g, color: '#d2a8ff', name: 'builtin' },
+    { pattern: '//.*', color: '#8b949e' },
+    { pattern: '/\\*[\\s\\S]*?\\*/', color: '#8b949e' },
+    { pattern: '\\b(public|private|protected|static|final|abstract|synchronized|volatile|transient|native|strictfp|class|interface|extends|implements|enum|package|import|void|return|if|else|for|while|do|switch|case|break|continue|try|catch|finally|throw|throws|new|this|super|instanceof)\\b', color: '#ff7b72' },
+    { pattern: '"[^"\\\\]*(\\\\.[^"\\\\]*)*"', color: '#a5d6ff' },
+    { pattern: "'[^'\\\\]*(\\\\.[^'\\\\]*)*'", color: '#a5d6ff' },
+    { pattern: '\\b\\d+\\.?\\d*[fFdDlL]?\\b', color: '#79c0ff' },
+    { pattern: '\\b(true|false|null)\\b', color: '#79c0ff' },
+    { pattern: '\\b(int|long|short|byte|float|double|boolean|char|String)\\b', color: '#ffa657' },
+    { pattern: '\\b(System|Math|String|Integer|Double|Boolean|Character|Object|Thread|Exception|ArrayList|HashMap|List|Map|Set)\\b', color: '#d2a8ff' }
   ],
   cpp: [
-    { pattern: /\b(int|void|char|float|double|class|public|private|protected|if|else|for|while|return|new|delete|this|nullptr|using|namespace|include)\b/g, color: '#ff7b72', name: 'keyword' },
-    { pattern: /(\/\/.*$)/gm, color: '#8b949e', name: 'comment' },
-    { pattern: /(\/\*[\s\S]*?\*\/)/g, color: '#8b949e', name: 'comment' },
-    { pattern: /(".*?")/g, color: '#a5d6ff', name: 'string' },
-    { pattern: /\b(\d+)\b/g, color: '#79c0ff', name: 'number' },
-    { pattern: /\b(true|false)\b/g, color: '#79c0ff', name: 'boolean' },
-    { pattern: /\b(cout|cin|endl|std|vector|string)\b/g, color: '#d2a8ff', name: 'builtin' },
-    { pattern: /(#\w+)/g, color: '#ff7b72', name: 'preprocessor' },
+    { pattern: '//.*', color: '#8b949e' },
+    { pattern: '/\\*[\\s\\S]*?\\*/', color: '#8b949e' },
+    { pattern: '#\\s*(include|define|ifdef|ifndef|endif|pragma)\\b.*', color: '#d2a8ff' },
+    { pattern: '\\b(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|class|namespace|public|private|protected|virtual|override|final|using|try|catch|throw|new|delete|this|template|typename)\\b', color: '#ff7b72' },
+    { pattern: '"[^"\\\\]*(\\\\.[^"\\\\]*)*"', color: '#a5d6ff' },
+    { pattern: "'[^'\\\\]*(\\\\.[^'\\\\]*)*'", color: '#a5d6ff' },
+    { pattern: '\\b\\d+\\.?\\d*[fFlLuU]*\\b', color: '#79c0ff' },
+    { pattern: '\\b(true|false|nullptr|NULL)\\b', color: '#79c0ff' },
+    { pattern: '\\b(std|cout|cin|endl|vector|string|map|set|pair|queue|stack|deque|list|array)\\b', color: '#d2a8ff' }
   ],
   c: [
-    { pattern: /\b(int|void|char|float|double|if|else|for|while|return|sizeof|struct|typedef|const|static)\b/g, color: '#ff7b72', name: 'keyword' },
-    { pattern: /(\/\/.*$)/gm, color: '#8b949e', name: 'comment' },
-    { pattern: /(\/\*[\s\S]*?\*\/)/g, color: '#8b949e', name: 'comment' },
-    { pattern: /(".*?")/g, color: '#a5d6ff', name: 'string' },
-    { pattern: /\b(\d+)\b/g, color: '#79c0ff', name: 'number' },
-    { pattern: /\b(printf|scanf|malloc|free|NULL)\b/g, color: '#d2a8ff', name: 'builtin' },
-    { pattern: /(#\w+)/g, color: '#ff7b72', name: 'preprocessor' },
+    { pattern: '//.*', color: '#8b949e' },
+    { pattern: '/\\*[\\s\\S]*?\\*/', color: '#8b949e' },
+    { pattern: '#\\s*(include|define|ifdef|ifndef|endif|pragma)\\b.*', color: '#d2a8ff' },
+    { pattern: '\\b(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while)\\b', color: '#ff7b72' },
+    { pattern: '"[^"\\\\]*(\\\\.[^"\\\\]*)*"', color: '#a5d6ff' },
+    { pattern: "'[^'\\\\]*(\\\\.[^'\\\\]*)*'", color: '#a5d6ff' },
+    { pattern: '\\b\\d+\\.?\\d*[fFlLuU]*\\b', color: '#79c0ff' },
+    { pattern: '\\b(NULL)\\b', color: '#79c0ff' },
+    { pattern: '\\b(printf|scanf|malloc|free|sizeof|memcpy|memset|strlen|strcpy|strcmp|strcat|FILE|size_t)\\b', color: '#d2a8ff' }
   ]
 };
+
+
 
 export function CodeEditor({
   value,
@@ -109,7 +117,8 @@ export function CodeEditor({
   const [autocompleteOptions, setAutocompleteOptions] = useState<string[]>([]);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
-  
+  const [forcedSelection, setForcedSelection] = useState<{ start: number; end: number } | undefined>(undefined);
+
   const lines = value.split('\n');
   const lineCount = lines.length || 1; // Actual line count, no minimum
   const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1);
@@ -123,7 +132,7 @@ export function CodeEditor({
     
     // Find all matches for each pattern
     patterns.forEach(({ pattern, color }) => {
-      const regex = new RegExp(pattern);
+      const regex = new RegExp(pattern, 'g'); // Add 'g' flag to prevent infinite loop
       let match;
       
       while ((match = regex.exec(code)) !== null) {
@@ -194,41 +203,50 @@ export function CodeEditor({
   }, [value, cursorPosition, language, showAutocomplete]);
 
   const handleTextChange = (text: string) => {
-    // Use the previous cursor position to determine where the user inserted text.
-    // This is more reliable than a left-to-right string diff and avoids
-    // 'mirrored' characters appearing around the caret when editing in the middle.
     const prevText = value;
     const closingPairs: Record<string, string> = {
       '{': '}',
       '[': ']',
-      '(': ')',
-      '"': '"',
-      "'": "'",
-      '`': '`'
+      '(': ')'
     };
 
     const delta = text.length - prevText.length;
 
-    // Insertion case (typing or single-char paste)
-    if (delta > 0) {
-      // assume insertion occurred at the previous cursor position
+    // Handle auto-closing pairs - only when typing a single opening character
+    if (delta === 1 && text.length > 0) {
       const insertStart = cursorPosition;
-      const inserted = text.slice(insertStart, insertStart + delta);
+      const inserted = text.charAt(insertStart);
+      const nextChar = prevText.charAt(insertStart);
 
-      // If the user typed a single opening char, auto-close it at the insertion point
-      if (inserted.length === 1 && closingPairs[inserted]) {
+      // Check if user typed a closing bracket/brace and next char matches - skip over it
+      if (Object.values(closingPairs).includes(inserted) && nextChar === inserted) {
+        const newCursor = insertStart + 1;
+        setTimeout(() => {
+          setCursorPosition(newCursor);
+          setForcedSelection({ start: newCursor, end: newCursor });
+          setTimeout(() => setForcedSelection(undefined), 0);
+        }, 0);
+        return;
+      }
+
+      // If the user typed an opening bracket/brace, auto-close it
+      if (closingPairs[inserted]) {
         const closingChar = closingPairs[inserted];
         const newValue = prevText.slice(0, insertStart) + inserted + closingChar + prevText.slice(insertStart);
         onChange(newValue);
 
-        // place caret between the pair
+        // Place caret between the pair
         const newCursor = insertStart + 1;
-        setCursorPosition(newCursor);
+        setTimeout(() => {
+          setCursorPosition(newCursor);
+          setForcedSelection({ start: newCursor, end: newCursor });
+          setTimeout(() => setForcedSelection(undefined), 0);
+        }, 0);
         return;
       }
     }
 
-    // Deletion or replacement or paste of multiple characters: just propagate value
+    // For all other cases, just update the value and let TextInput handle cursor naturally
     onChange(text);
   };
 
@@ -240,17 +258,20 @@ export function CodeEditor({
     // Handle Tab key
     if (e.nativeEvent.key === 'Tab') {
       e.preventDefault();
-      
+
       const beforeCursor = value.substring(0, cursorPosition);
       const afterCursor = value.substring(cursorPosition);
-      const tabSpaces = '  '; // 2 spaces (you can change to '    ' for 4 spaces)
-      
+      const tabSpaces = '  '; // 2 spaces
+
       const newValue = beforeCursor + tabSpaces + afterCursor;
       onChange(newValue);
-      
+
       // Update cursor position
+      const newCursorPos = cursorPosition + tabSpaces.length;
       setTimeout(() => {
-        setCursorPosition(cursorPosition + tabSpaces.length);
+        setCursorPosition(newCursorPos);
+        setForcedSelection({ start: newCursorPos, end: newCursorPos });
+        setTimeout(() => setForcedSelection(undefined), 0);
       }, 0);
     }
   };
@@ -260,14 +281,18 @@ export function CodeEditor({
     const textAfterCursor = value.substring(cursorPosition);
     const words = textBeforeCursor.split(/[\s\n\r\t(){}\[\];,.<>]/);
     const currentWord = words[words.length - 1];
-    
+
     const newTextBefore = textBeforeCursor.substring(0, textBeforeCursor.length - currentWord.length);
     const newText = newTextBefore + suggestion + textAfterCursor;
-    
+
     onChange(newText);
-    // move cursor to the end of the inserted suggestion
+    // Move cursor to the end of the inserted suggestion
     const newCursorPos = newTextBefore.length + suggestion.length;
-    setTimeout(() => setCursorPosition(newCursorPos), 0);
+    setTimeout(() => {
+      setCursorPosition(newCursorPos);
+      setForcedSelection({ start: newCursorPos, end: newCursorPos });
+      setTimeout(() => setForcedSelection(undefined), 0);
+    }, 0);
     setAutocompleteOptions([]);
   };
 
@@ -286,39 +311,39 @@ export function CodeEditor({
     let formatted = value;
     let indentLevel = 0;
     const indentSize = 2; // 2 spaces per indent
-    
+
     // Split into lines and process each
     const lines = formatted.split('\n');
     const formattedLines = lines.map((line) => {
       let trimmed = line.trim();
       if (!trimmed) return '';
-      
+
       // Decrease indent for closing braces/brackets
       if (trimmed.startsWith('}') || trimmed.startsWith(']') || trimmed.startsWith(')')) {
         indentLevel = Math.max(0, indentLevel - 1);
       }
-      
+
       // Add indentation
       const indentedLine = ' '.repeat(indentLevel * indentSize) + trimmed;
-      
+
       // Increase indent for opening braces/brackets
       if (trimmed.endsWith('{') || trimmed.endsWith('[') || trimmed.endsWith('(')) {
         indentLevel++;
       }
-      
+
       // Handle else, elif, except on same level as if/try
-      if (trimmed.startsWith('else') || trimmed.startsWith('elif') || 
-          trimmed.startsWith('except') || trimmed.startsWith('catch') ||
-          trimmed.startsWith('finally')) {
+      if (trimmed.startsWith('else') || trimmed.startsWith('elif') ||
+        trimmed.startsWith('except') || trimmed.startsWith('catch') ||
+        trimmed.startsWith('finally')) {
         return ' '.repeat((indentLevel - 1) * indentSize) + trimmed;
       }
-      
+
       return indentedLine;
     });
-    
+
     // Join lines and add spacing around operators
     formatted = formattedLines.join('\n');
-    
+
     // Add spaces around operators (=, +, -, *, /, ==, !=, etc.)
     formatted = formatted.replace(/([^=!<>])=([^=])/g, '$1 = $2'); // assignment
     formatted = formatted.replace(/([^=!<>])==([^=])/g, '$1 == $2'); // equality
@@ -329,35 +354,35 @@ export function CodeEditor({
     formatted = formatted.replace(/([^\s])-([^\s-])/g, '$1 - $2'); // minus
     formatted = formatted.replace(/([^\s])\*([^\s*])/g, '$1 * $2'); // multiply
     formatted = formatted.replace(/([^\s])\/([^\s/])/g, '$1 / $2'); // divide
-    
+
     // Add space after commas
     formatted = formatted.replace(/,([^\s])/g, ', $1');
-    
+
     // Add space after keywords
     const keywords = ['if', 'for', 'while', 'def', 'function', 'class', 'return'];
     keywords.forEach(keyword => {
       const regex = new RegExp(`\\b${keyword}\\(`, 'g');
       formatted = formatted.replace(regex, `${keyword} (`);
     });
-    
+
     // Remove multiple blank lines
     formatted = formatted.replace(/\n\s*\n\s*\n/g, '\n\n');
-    
+
     onChange(formatted);
   };
 
   return (
-    <View style={{ 
-      borderWidth: 1, 
-      borderColor: isFocused ? '#58a6ff' : '#30363d', 
-      borderRadius: 8, 
+    <View style={{
+      borderWidth: 1,
+      borderColor: isFocused ? '#58a6ff' : '#30363d',
+      borderRadius: 8,
       overflow: 'hidden',
       backgroundColor: '#0d1117'
     }}>
       {/* Toolbar */}
-      <View style={{ 
-        flexDirection: 'row', 
-        alignItems: 'center', 
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 10,
@@ -375,8 +400,8 @@ export function CodeEditor({
         </View>
 
         <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-          <TouchableOpacity 
-            onPress={() => setShowAutocomplete(!showAutocomplete)} 
+          <TouchableOpacity
+            onPress={() => setShowAutocomplete(!showAutocomplete)}
             style={{ padding: 6 }}
           >
             <Lightbulb size={16} color={showAutocomplete ? '#f9826c' : '#8b949e'} />
@@ -394,9 +419,9 @@ export function CodeEditor({
       </View>
 
       {/* Editor Area */}
-      <ScrollView 
-        style={{ 
-          flex: 1, 
+      <ScrollView
+        style={{
+          flex: 1,
           maxHeight: minHeight,
           ...(Platform.OS === 'web' && {
             // @ts-ignore - Web-only scrollbar styling
@@ -408,8 +433,8 @@ export function CodeEditor({
       >
         <View style={{ flexDirection: 'row' }}>
           {/* Line Numbers */}
-          <View style={{ 
-            backgroundColor: '#0d1117', 
+          <View style={{
+            backgroundColor: '#0d1117',
             paddingVertical: 12,
             paddingHorizontal: 8,
             borderRightWidth: 1,
@@ -417,9 +442,9 @@ export function CodeEditor({
             width: 50
           }}>
             {lineNumbers.map(num => (
-              <RNText key={num} style={{ 
-                color: '#6e7681', 
-                fontSize: 13, 
+              <RNText key={num} style={{
+                color: '#6e7681',
+                fontSize: 13,
                 fontFamily: getMonospaceFont(),
                 lineHeight: 20,
                 height: 20
@@ -431,6 +456,38 @@ export function CodeEditor({
 
           {/* Code Input */}
           <View style={{ flex: 1, position: 'relative' }}>
+            {/* TextInput for typing */}
+            <TextInput
+              value={value}
+              onChangeText={handleTextChange}
+              onSelectionChange={handleSelectionChange}
+              onKeyPress={handleKeyPress}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder={placeholder}
+              placeholderTextColor="#6e7681"
+              multiline
+              editable={!readOnly}
+              scrollEnabled={false}
+              {...(forcedSelection && { selection: forcedSelection })}
+              style={{
+                color: 'rgba(0,0,0,0)',
+                fontFamily: getMonospaceFont(),
+                fontSize: 13,
+                lineHeight: 20,
+                paddingVertical: 12,
+                paddingHorizontal: 12,
+                minHeight: minHeight,
+                flex: 1,
+                outline: 'none',
+                zIndex: 2,
+                caretColor: '#58a6ff',
+                WebkitTextFillColor: 'transparent'
+              } as any}
+              selectionColor="rgba(88, 166, 255, 0.3)"
+            />
+
+            {/* Syntax Highlighting Overlay */}
             <View 
               pointerEvents="none"
               style={{
@@ -446,9 +503,9 @@ export function CodeEditor({
               {lines.map((line, idx) => {
                 const highlighted = highlightCode(line);
                 return (
-                  <RNText className='tracking-widest' key={idx} style={{ 
+                  <RNText key={idx} style={{ 
                     fontFamily: getMonospaceFont(),
-                    fontSize: 14,
+                    fontSize: 13,
                     lineHeight: 20,
                     height: 20
                   }}>
@@ -463,43 +520,11 @@ export function CodeEditor({
               })}
             </View>
 
-            {/* Invisible TextInput for typing */}
-            <TextInput
-              value={value}
-              onChangeText={handleTextChange}
-              onSelectionChange={handleSelectionChange}
-              onKeyPress={handleKeyPress}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder={placeholder}
-              placeholderTextColor="#6e7681"
-              multiline
-              editable={!readOnly}
-              scrollEnabled={false}
-              // keep the caret in the correct position for controlled input
-              selection={{ start: cursorPosition, end: cursorPosition }}
-              style={{
-                color: 'transparent',
-                fontFamily: getMonospaceFont(),
-                fontSize: 13,
-                lineHeight: 20,
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                textAlignVertical: 'top',
-                minHeight: minHeight,
-                flex: 1,
-                outline: 'none',
-                zIndex: 2,
-                caretColor: '#58a6ff'
-              } as any}
-              selectionColor="rgba(88, 166, 255, 0.3)"
-            />
-
             {/* Autocomplete Dropdown */}
             {autocompleteOptions.length > 0 && (
               <View style={{
                 position: 'absolute',
-                top: 60,
+                top: 32,
                 left: 12,
                 backgroundColor: '#1c2128',
                 borderWidth: 1,
@@ -543,9 +568,9 @@ export function CodeEditor({
       </ScrollView>
 
       {/* Status Bar */}
-      <View style={{ 
-        flexDirection: 'row', 
-        alignItems: 'center', 
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 12,
         paddingVertical: 6,

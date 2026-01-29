@@ -5,3 +5,4 @@ export { useAuthStore } from './authStore';
 export { useCourseStore } from './courseStore';
 export { useTestStore } from './testStore';
 export { useUserStore } from './userStore';
+export { useNotificationStore } from './notificationStore';

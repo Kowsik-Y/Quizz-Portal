@@ -19,4 +19,5 @@ export default function Screen() {
   }
 
   return <Redirect href="/(protected)/(tabs)/home" />;
+  
 }

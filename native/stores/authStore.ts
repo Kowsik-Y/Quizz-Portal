@@ -1,8 +1,9 @@
 // Auth Store with Zustand
 // Manages authentication state and user session
+// Uses JWT tokens stored in cookies (web) and AsyncStorage (mobile)
 
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import SecureStorage from '../lib/storage';
 import api from '../lib/api';
 import { showToast } from '../lib/toast';
 import { handleApiError } from '../lib/errorHandler';
@@ -47,14 +48,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { token, user } = response.data;
-
-      // Save to AsyncStorage
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-
-      // Update axios default headers
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const { user, token } = response.data;
+      
+      // Store token in secure storage (cookies for web, AsyncStorage for mobile)
+      await SecureStorage.setItem('auth_token', token);
 
       set({
         user,
@@ -86,14 +83,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password, 
         role 
       });
-      const { token, user } = response.data;
-
-      // Save to AsyncStorage
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-
-      // Update axios default headers
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const { user, token } = response.data;
+      
+      // Store token in secure storage (cookies for web, AsyncStorage for mobile)
+      await SecureStorage.setItem('auth_token', token);
 
       set({
         user,
@@ -118,7 +111,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Logout
   logout: async () => {
     try {
-      // Call backend logout API to log the activity
+      // Call backend logout API to clear cookie and log activity
       try {
         await api.post('/auth/logout');
       } catch (apiError) {
@@ -126,13 +119,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Continue with local logout even if API fails
       }
 
-      // Clear AsyncStorage
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
-
-      // Clear axios headers
-      delete api.defaults.headers.common['Authorization'];
-
+      // Clear token from secure storage
+      await SecureStorage.removeItem('auth_token');
+      
       set({
         user: null,
         token: null,
@@ -151,9 +140,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await api.put('/auth/profile', data);
       const updatedUser = response.data.user;
-
-      // Update AsyncStorage
-      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
 
       set({
         user: updatedUser,
@@ -189,47 +175,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ initializing: true, _isCheckingAuth: true });
     
     try {
-      const token = await AsyncStorage.getItem('token');
-      const userStr = await AsyncStorage.getItem('user');
-
-      if (token && userStr) {
-        const user = JSON.parse(userStr);
-
-        // Set axios default headers
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-        // Verify token is still valid
-        try {
-          const response = await api.get('/auth/me');
-          const validUser = response.data.user;
-
-          set({
-            user: validUser,
-            token,
-            isAuthenticated: true,
-            initializing: false,
-            _isCheckingAuth: false,
-          });
-        } catch (error) {
-          // Token invalid, clear storage
-          await AsyncStorage.removeItem('token');
-          await AsyncStorage.removeItem('user');
-          set({ 
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            initializing: false,
-            _isCheckingAuth: false,
-          });
-        }
-      } else {
+      // Get token from secure storage
+      const token = await SecureStorage.getItem('auth_token');
+      
+      if (!token) {
+        // No token found, user is not authenticated
         set({ 
+          user: null,
+          token: null,
+          isAuthenticated: false,
           initializing: false,
           _isCheckingAuth: false,
         });
+        return;
       }
+
+      // Verify token with backend
+      const response = await api.get('/auth/me');
+      const validUser = response.data.user;
+
+      set({
+        user: validUser,
+        token,
+        isAuthenticated: true,
+        initializing: false,
+        _isCheckingAuth: false,
+      });
     } catch (error) {
+      // Invalid or expired token
+      await SecureStorage.removeItem('auth_token');
       set({ 
+        user: null,
+        token: null,
+        isAuthenticated: false,
         initializing: false,
         _isCheckingAuth: false,
       });

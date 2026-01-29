@@ -61,8 +61,8 @@ export function CustomAlertProvider({ children }: { children: React.ReactNode })
   return (
     <AlertContext.Provider value={{ showAlert }}>
       {children}
-      <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
-        <AlertDialogContent>
+      <AlertDialog open={isOpen} onOpenChange={handleOpenChange}  >
+        <AlertDialogContent >
           <AlertDialogHeader>
             <AlertDialogTitle>{alertOptions.title}</AlertDialogTitle>
             {alertOptions.message && (
@@ -107,11 +107,3 @@ export function useCustomAlert() {
   }
   return context;
 }
-
-// Utility function to mimic Alert.alert API
-export const CustomAlert = {
-  alert: (title: string, message?: string, buttons?: AlertButton[]) => {
-    const { showAlert } = useCustomAlert();
-    showAlert(title, message, buttons);
-  },
-};

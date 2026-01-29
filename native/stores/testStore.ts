@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import api from '../lib/api';
-import { showToast, toastHelpers } from '../lib/toast';
+import { showToast } from '../lib/toast';
 import { handleApiError } from '../lib/errorHandler';
 
 interface Test {
@@ -11,13 +11,30 @@ interface Test {
   title: string;
   description: string;
   duration: number;
+  duration_minutes: number;
   total_marks: number;
-  department_id: number;
+  department_id?: number;
   course_id: number;
+  course_title?: string;
   created_by: number;
   is_active: boolean;
   created_at: string;
-  question_count?: number;
+  updated_at?: string;
+  question_count?: number | string;
+  questions_to_ask?: number;
+  test_type: 'instant' | 'booking' | 'timed';
+  quiz_type?: 'code' | 'mcq' | 'mixed';
+  start_time?: string | null;
+  end_time?: string | null;
+  max_attempts?: number;
+  passing_score?: number;
+  user_attempts?: number;
+  allowed_browsers?: string | null;
+  platform_restriction?: 'any' | 'mobile' | 'desktop';
+  detect_phone_call?: boolean;
+  detect_window_switch?: boolean;
+  prevent_screenshot?: boolean;
+  show_review_to_students?: boolean;
 }
 
 interface Booking {
@@ -67,6 +84,19 @@ export const useTestStore = create<TestState>((set, get) => ({
       const response = await api.get('/tests');
       // Backend returns { tests: [...] }
       const testsData = response.data.tests || response.data;
+      
+      // Debug: Log first test to check user_attempts
+      if (testsData && testsData.length > 0) {
+        console.log('Fetched test data sample:', {
+          id: testsData[0].id,
+          title: testsData[0].title,
+          max_attempts: testsData[0].max_attempts,
+          user_attempts: testsData[0].user_attempts,
+          has_user_attempts: 'user_attempts' in testsData[0],
+          type_of_user_attempts: typeof testsData[0].user_attempts
+        });
+      }
+      
       set({ 
         tests: testsData, 
         loading: false 

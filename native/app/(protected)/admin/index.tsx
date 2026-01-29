@@ -1,4 +1,4 @@
-import { View, ScrollView, Pressable, Platform } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { 
   Building2, 
@@ -13,10 +13,10 @@ import {
   Database
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
+import AdminCard from '@/components/AdminCard';
 
 export default function AdminManagementPage() {
   const { colorScheme } = useColorScheme();
@@ -29,44 +29,7 @@ export default function AdminManagementPage() {
     if (user?.role !== 'admin') {
       router.replace('/home');
     }
-  }, [user]);
-
-  const AdminCard = ({ 
-    icon: Icon, 
-    title, 
-    description, 
-    onPress, 
-    color = '#3b82f6',
-    bgColor = 'bg-blue-50',
-    darkBgColor = 'bg-blue-900/20'
-  }: any) => (
-    <Pressable
-      onPress={onPress}
-      className={`rounded-2xl p-5 mb-4 ${
-        isDark ? `${darkBgColor} border border-gray-700` : `${bgColor} border border-gray-200`
-      }`}
-      style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-    >
-      <View className="flex-row items-center">
-        <View
-          className={`w-16 h-16 rounded-2xl items-center justify-center ${
-            isDark ? 'bg-gray-800' : 'bg-white'
-          }`}
-          style={{ shadowColor: color, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 }}
-        >
-          <Icon size={28} color={color} />
-        </View>
-        <View className="ml-4 flex-1">
-          <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {title}
-          </Text>
-          <Text className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            {description}
-          </Text>
-        </View>
-      </View>
-    </Pressable>
-  );
+  }, [router, user]);
 
   const SectionHeader = ({ title }: { title: string }) => (
     <Text className={`text-xs font-bold uppercase tracking-wider mb-3 mt-2 ${

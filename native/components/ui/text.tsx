@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils';
-import * as Slot from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { Platform, StyleSheet, Text as RNText, type Role } from 'react-native';
@@ -106,14 +105,13 @@ function Text({
     asChild?: boolean;
   }) {
   const textClass = React.useContext(TextClassContext);
-  const Component = asChild ? Slot.Text : RNText;
+  const Component = asChild ? RNText : RNText;
   
   // Get font family and weight based on className and variant
   const getFontConfig = () => {
     let baseFontFamily = '';
     let weight = '400';
     
-    // Priority 1: Check className for font weight
     if (className?.includes('font-bold') || className?.includes('font-extrabold')) {
       baseFontFamily = 'Poppins_700Bold';
       weight = '700';
@@ -124,7 +122,6 @@ function Text({
       baseFontFamily = 'Poppins_500Medium';
       weight = '500';
     } 
-    // Priority 2: Check variant for font weight
     else if (variant === 'h1' || variant === 'h2') {
       baseFontFamily = 'Poppins_700Bold';
       weight = '700';
@@ -142,25 +139,20 @@ function Text({
     
     const platformFontFamily = getPlatformFontFamily(baseFontFamily);
     
-    // Use platform-specific font style (Android doesn't need fontWeight)
     return getPlatformFontStyle(platformFontFamily, weight);
   };
 
   const fontConfig = getFontConfig();
   
-  // On mobile, we need to completely override NativeWind's font handling
-  // Strip font-weight related classes from className on mobile to prevent conflicts
   const processedClassName = Platform.OS === 'web'
     ? className
     : className?.replace(/font-(bold|extrabold|semibold|medium|normal)/g, '').trim();
   
-  // On mobile, we need to completely override NativeWind's font handling
-  // because React Native requires specific font files for each weight
   const finalStyle = Platform.OS === 'web' 
     ? style // Web can use CSS font-weight
     : StyleSheet.flatten([
         style,
-        fontConfig, // Override any fontFamily/fontWeight from NativeWind
+        fontConfig, 
       ]);
   
   return (

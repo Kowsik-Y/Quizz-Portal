@@ -10,6 +10,7 @@ export default function TabLayout() {
   const { width } = useWindowDimensions();
   const iconColor = colorScheme === 'dark' ? '#9ca3af' : '#6b7280';
   const activeColor = '#3b82f6';
+  const backgroundColor = colorScheme === 'dark' ? '#1a1f2e' : '#f9fafb';
 
   const canCreateTests = user?.role === 'teacher' || user?.role === 'admin';
   const isWeb = Platform.OS === 'web';
@@ -22,6 +23,9 @@ export default function TabLayout() {
         tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: iconColor,
         headerShown: false,
+        sceneStyle: {
+          backgroundColor: backgroundColor
+        },
         tabBarStyle: {
           display: showBottomTabs ? 'flex' : 'none',
           position: 'absolute',

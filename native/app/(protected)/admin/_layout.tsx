@@ -1,26 +1,29 @@
-import { useEffect } from 'react';
-import { useRouter, Stack, Redirect } from 'expo-router';
+import { useEffect, useMemo } from 'react';
+import { useRouter, Stack } from 'expo-router';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useColorScheme } from 'nativewind';
 import HeaderTile from '@/components/ui/headerTile';
 
 export default function AdminLayout() {
   const router = useRouter();
-  const user = { role: 'admin' }; 
+  const { colorScheme } = useColorScheme();
+  const user = useMemo(() => ({ role: 'admin' }), []);
+  const backgroundColor = colorScheme === 'dark' ? '#1a1f2e' : '#f9fafb';
 
   useEffect(() => {
     if (user?.role !== 'admin' && user?.role !== 'teacher') {
       router.replace('/home');
     }
-  }, [user]);
+  }, [user, router]);
 
   if (user?.role !== 'admin' && user?.role !== 'teacher') {
     return (
-      <View className="flex-1 justify-center items-center p-6 bg-white">
+      <View className="flex-1 justify-center items-center p-6 bg-background">
         <Text className="text-xl font-bold text-red-600 mb-4">
           ⛔ Access Denied
         </Text>
-        <Text className="text-gray-600 text-center mb-6">
-          You don't have permission to access this area.
+        <Text className="text-foreground text-center mb-6">
+          You don&apos;t have permission to access this area.
         </Text>
         <TouchableOpacity
           onPress={() => router.replace('/home')}
@@ -36,7 +39,10 @@ export default function AdminLayout() {
     <Stack
       screenOptions={{
         headerShown: true,
-        animation:'slide_from_right',
+        animation: 'default',
+        contentStyle: {
+          backgroundColor: backgroundColor
+        },
         headerStyle: {
           backgroundColor: '#dc2626',
         },
@@ -66,10 +72,10 @@ export default function AdminLayout() {
       />
       <Stack.Screen
         name="create-user"
-        
+
         options={{
           presentation: 'modal',
-          webModalStyle: {'height': '80%'},
+          webModalStyle: { 'height': '80%' },
           header: () => <HeaderTile title='Create User' foot="Add a new user account" />
         }}
       />

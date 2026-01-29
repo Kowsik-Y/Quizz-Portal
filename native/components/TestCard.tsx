@@ -1,110 +1,362 @@
-import React from 'react';
-import { View, Pressable } from 'react-native';
-import { Text } from '@/components/ui/text';
-import { Clock, BookOpen } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import { useRouter } from 'expo-router';
+import React from "react";
+import { View, Pressable, Platform } from "react-native";
+import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+	BookOpen,
+	Clock,
+	FileText,
+	Calendar,
+	PlayCircle,
+	AlertCircle,
+	Code2,
+	Award,
+	Shield,
+} from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { showToast } from "@/lib/toast";
+import { useColorScheme } from "nativewind";
 
 interface TestCardProps {
-  title: string;
-  questions: number;
-  duration: number;
-  score?: number;
-  completed?: boolean;
-  width?: string | number;
-  onRetake?: () => void;
+	test: any;
+	canTakeTest: boolean;
+	isCompleted: boolean;
+	maxAttemptsReached: boolean;
+	testType: string;
+	numColumns?: number;
+	width?: number | string;
 }
 
-export const TestCard: React.FC<TestCardProps> = ({ 
-  title, 
-  questions, 
-  duration, 
-  score, 
-  completed = false,
-  width = '100%',
-  onRetake
+export const TestCard: React.FC<TestCardProps> = ({
+	test,
+	canTakeTest,
+	isCompleted,
+	width,
+	maxAttemptsReached,
+	testType,
+	numColumns = 1,
 }) => {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const router = useRouter();
+	const { colorScheme: theme } = useColorScheme();
+	const isDark = theme === "dark";
+	const router = useRouter();
+	const isWeb = Platform.OS === "web";
 
-  return (
-    <View
-      className={`rounded-xl p-5 mb-4 ${
-        isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-      }`}
-      style={{ width }}
-    >
-      {/* Title and Score Badge */}
-      <View className="flex-row items-start justify-between mb-3">
-        <View className="flex-1">
-          <Text 
-            className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
-            numberOfLines={2}
-          >
-            {title}
-          </Text>
-        </View>
-        {completed && score !== undefined && (
-          <View className="bg-green-500 rounded-full px-3 py-1 ml-2">
-            <Text className="text-white font-semibold text-sm">{score}%</Text>
-          </View>
-        )}
-      </View>
+	// Get quiz type (code/mcq/etc)
+	const quizType = test.quiz_type || "mixed";
+	const isCodeQuiz = quizType === "code";
 
-      {/* Test Info */}
-      <View className="flex-row items-center gap-4 mb-4">
-        <View className="flex-row items-center">
-          <BookOpen size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-          <Text className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            {questions} questions
-          </Text>
-        </View>
-        <View className="flex-row items-center">
-          <Clock size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
-          <Text className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            {duration} minutes
-          </Text>
-        </View>
-      </View>
+	// Check if test has security features enabled
+	const hasSecurityFeatures =
+		test.detect_window_switch ||
+		test.prevent_screenshot ||
+		test.detect_phone_call;
 
-      {/* Action Buttons */}
-      <View className="flex-row gap-2">
-        {completed ? (
-          <>
-            <Pressable className="flex-1 bg-blue-500 rounded-lg py-3">
-              <Text className="text-white font-semibold text-center">Review Answers</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                if (onRetake) {
-                  onRetake();
-                } else {
-                  router.push(`/tests/take-test?id=${test.id}`);
-                }
-              }}
-              className={`flex-1 rounded-lg py-3 ${
-                isDark ? 'bg-gray-700' : 'bg-gray-100'
-              }`}
-            >
-              <Text className={`text-center font-semibold ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Retake
-              </Text>
-            </Pressable>
-          </>
-        ) : (
-          <Pressable 
-            onPress={() => router.push(`/tests/take-test?id=${test.id}`)}
-            className="flex-1 bg-blue-500 rounded-lg py-3"
-          >
-            <Text className="text-white font-semibold text-center">Start Test</Text>
-          </Pressable>
-        )}
-      </View>
-    </View>
-  );
+	const getTypeConfig = () => {
+		const type = testType.toLowerCase();
+		switch (type) {
+			case "instant":
+				return {
+					bgColor: "bg-green-100",
+					textColor: "text-green-700",
+					label: "Instant",
+				};
+			case "booking":
+				return {
+					bgColor: "bg-blue-100",
+					textColor: "text-blue-700",
+					label: "Booking Required",
+				};
+			default:
+				return {
+					bgColor: "bg-yellow-100",
+					textColor: "text-yellow-700",
+					label: "Timed",
+				};
+		}
+	};
+
+	const typeConfig = getTypeConfig();
+
+	const handleTakeTest = (e: any) => {
+		e?.stopPropagation?.();
+
+		if (!test.is_active) {
+			showToast.error("This test is currently not active", {
+				title: "Test Inactive",
+			});
+			return;
+		}
+
+		if (canTakeTest) {
+			router.push(`/tests/take-test?id=${test.id}` as any);
+		} else if (testType === "booking") {
+			showToast.warning("Please book a slot first", {
+				title: "Booking Required",
+			});
+			router.push(`/tests/book-test?id=${test.id}` as any);
+		} else {
+			showToast.error("Test is not available at this time", {
+				title: "Cannot Take Test",
+			});
+		}
+	};
+
+	return (
+		<Pressable
+			onPress={() => router.push(`/tests/test-details?id=${test.id}` as any)}
+			accessibilityRole="button"
+			accessibilityLabel={`test card for ${test.title}`}
+			hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+			className={`rounded-2xl px-5 py-4 mb-4 ${isDark ? "bg-card" : "bg-white"} border ${isDark ? "border-border" : "border-gray-200"}`}
+			style={{
+				width: isWeb
+					? numColumns === 3
+						? "32%"
+						: numColumns === 2
+							? "50%"
+							: "100%"
+					: "100%",
+				opacity: 1,
+				shadowColor: "#000",
+				shadowOffset: { width: 0, height: 1 },
+				shadowOpacity: isDark ? 0.3 : 0.01,
+				shadowRadius: 4,
+				elevation: 3,
+			}}
+		>
+			{/* Header */}
+			<View className="flex-row items-start justify-between mb-3">
+				<View className="flex-1 pr-2">
+					<View className="flex-row items-center gap-2 mb-1 flex-wrap">
+						<Text
+							className={`${isWeb ? "text-lg" : "text-base"} font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+							numberOfLines={2}
+						>
+							{test.title}
+						</Text>
+						{isCodeQuiz && (
+							<Badge
+								variant="secondary"
+								size="sm"
+								className="py-1 px-2 rounded-lg"
+							>
+								<Code2 size={14} />
+							</Badge>
+						)}
+					</View>
+					<Text className="text-xs text-blue-500 font-medium mb-1">
+						{test.course_title}
+					</Text>
+					<Text className="text-sm text-muted-foreground" numberOfLines={2}>
+						{test.description}
+					</Text>
+				</View>
+
+				{/* Status Badges */}
+				<View className="gap-1">
+					{maxAttemptsReached && (
+						<Badge
+							variant="warning"
+							size="sm"
+							className={`${isWeb ? "py-1.5 px-3" : "py-1 px-2"}`}
+						>
+							<Text className={isWeb ? "text-xs" : "text-[10px]"}>Max</Text>
+						</Badge>
+					)}
+					{!test.is_active && (
+						<Badge
+							variant="danger"
+							size="sm"
+							className={`${isWeb ? "py-1.5 px-3" : "py-1 px-2"}`}
+						>
+							<Text className={isWeb ? "text-xs" : "text-[10px]"}>Off</Text>
+						</Badge>
+					)}
+				</View>
+			</View>
+
+			{/* Test Info */}
+			<View
+				className={`flex-row items-center flex-wrap ${isWeb ? "gap-3" : "gap-2"} mb-4`}
+			>
+				<View className="flex-row items-center">
+					<BookOpen size={isWeb ? 14 : 12} color="#6b7280" />
+					<Text
+						className={`ml-1.5 ${isWeb ? "text-xs" : "text-[11px]"} text-muted-foreground`}
+					>
+						{test.question_count || 0} questions
+					</Text>
+				</View>
+				<View className="flex-row items-center">
+					<Clock size={isWeb ? 14 : 12} color="#6b7280" />
+					<Text
+						className={`ml-1.5 ${isWeb ? "text-xs" : "text-[11px]"} text-muted-foreground`}
+					>
+						{test.duration_minutes} min
+					</Text>
+				</View>
+				{test.passing_score && (
+					<View className="flex-row items-center">
+						<Award size={isWeb ? 14 : 12} color="#10b981" />
+						<Text
+							className={`ml-1.5 ${isWeb ? "text-xs" : "text-[11px]"} text-green-600`}
+						>
+							Pass: {test.passing_score}%
+						</Text>
+					</View>
+				)}
+				{hasSecurityFeatures && (
+					<View className="flex-row items-center">
+						<Shield size={isWeb ? 14 : 12} color="#f59e0b" />
+						<Text
+							className={`ml-1.5 ${isWeb ? "text-xs" : "text-[11px]"} text-amber-600`}
+						>
+							Monitored
+						</Text>
+					</View>
+				)}
+			</View>
+
+			{/* Type and Attempts Badge */}
+			<View className="flex-row items-center gap-2 mb-3 flex-wrap">
+				<Badge
+					variant={
+						testType === "instant"
+							? "success"
+							: testType === "booking"
+								? "info"
+								: "warning"
+					}
+					size="sm"
+					className={`${isWeb ? "py-1.5 px-3" : "py-1 px-2"}`}
+				>
+					<Text className={isWeb ? "text-xs" : "text-[11px]"}>
+						{typeConfig.label}
+					</Text>
+				</Badge>
+				{test.max_attempts && !maxAttemptsReached && (
+					<Badge
+						variant="secondary"
+						size="sm"
+						className={`${isWeb ? "py-1.5 px-3" : "py-1 px-2"}`}
+					>
+						<Text className={isWeb ? "text-xs" : "text-[11px]"}>
+							Max {test.max_attempts} attempts
+						</Text>
+					</Badge>
+				)}
+			</View>
+
+			{/* Action Buttons */}
+			<View className="gap-2 mb-3">
+				{/* Materials Button */}
+				<Button
+					onPress={(e: any) => {
+						e?.stopPropagation?.();
+						router.push(`/tests/test-details?id=${test.id}` as any);
+					}}
+					variant="outline"
+					size={isWeb ? "lg" : "default"}
+				>
+					<FileText size={isWeb ? 16 : 14} color="#3b82f6" />
+					<Text
+						className={
+							isWeb
+								? `text-sm ${isDark ? "text-white" : "text-gray-900"}`
+								: "text-xs text-primary"
+						}
+					>
+						Materials
+					</Text>
+				</Button>
+
+				{/* Book Slot Button - Only for booking type tests */}
+				{testType === "booking" && (
+					<Button
+						onPress={(e: any) => {
+							e?.stopPropagation?.();
+							router.push(`/tests/book-test?id=${test.id}` as any);
+						}}
+						variant="outline"
+						size={isWeb ? "lg" : "default"}
+					>
+						<Calendar
+							size={isWeb ? 16 : 14}
+							className="text-purple-500 dark:text-purple-400"
+						/>
+						<Text
+							className={`font-semibold text-purple-500 dark:text-purple-400 ${isWeb ? "text-sm" : "text-xs"}`}
+						>
+							Book Slot
+						</Text>
+					</Button>
+				)}
+			</View>
+
+			{/* Take Test / Review Buttons */}
+			<View className="flex-row gap-2">
+				{maxAttemptsReached ? (
+					<View className="flex-1">
+						<View
+							className={`bg-orange-50 dark:bg-orange-50/5 border border-orange-200 dark:border-orange-700 rounded-lg ${isWeb ? "p-3" : "p-2"} mb-2`}
+						>
+							<View className="flex-row items-center mb-1">
+								<AlertCircle size={isWeb ? 16 : 14} color="#f97316" />
+								<Text
+									className={`${isWeb ? "text-sm" : "text-xs"} font-medium text-orange-600 ml-1 `}
+								>
+									Maximum Attempts Reached
+								</Text>
+							</View>
+							<Text
+								className={`${isWeb ? "text-xs" : "text-[11px]"} text-orange-500`}
+							>
+								You&apos;ve completed all {test.max_attempts} attempts for this
+								test
+							</Text>
+						</View>
+						<Button
+							onPress={(e: any) => {
+								e?.stopPropagation?.();
+								router.push(`/tests/test-details?id=${test.id}` as any);
+							}}
+							variant="info"
+							size={isWeb ? "lg" : "default"}
+						>
+							<Text className={isWeb ? "text-sm" : "text-xs"}>
+								View Reports
+							</Text>
+						</Button>
+					</View>
+				) : (
+					<Button
+						onPress={handleTakeTest}
+						disabled={!test.is_active}
+						variant={canTakeTest && test.is_active ? "success" : "ghost"}
+						size={isWeb ? "lg" : "default"}
+						className="flex-1"
+					>
+						{canTakeTest && test.is_active ? (
+							<>
+								<PlayCircle size={isWeb ? 18 : 16} color="white" />
+								<Text className={`text-white ${isWeb ? "text-sm" : "text-xs"}`}>
+									{isCodeQuiz ? "Start Coding" : "Take Test"}
+								</Text>
+							</>
+						) : (
+							<>
+								<AlertCircle size={isWeb ? 18 : 16} color="white" />
+								<Text className={`text-white ${isWeb ? "text-sm" : "text-xs"}`}>
+									{!test.is_active ? "Inactive" : "Book Slot"}
+								</Text>
+							</>
+						)}
+					</Button>
+				)}
+			</View>
+		</Pressable>
+	);
 };
 
 export default TestCard;

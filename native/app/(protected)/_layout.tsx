@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { useRouter, Stack, Redirect, useSegments, usePathname } from 'expo-router';
+import { useRouter, Stack, Redirect, usePathname } from 'expo-router';
 import { View, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
-import { AppSidebar } from '@/components/AppSidebar';
 import { useColorScheme } from 'nativewind';
+import { AppSidebar } from '@/components/AppSidebar';
 import { useAuthStore } from '@/stores/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,7 +11,6 @@ export default function ProtectedLayout() {
   const pathname = usePathname();
   const { width } = useWindowDimensions();
   const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const initializing = useAuthStore((state) => state.initializing);
@@ -23,16 +22,19 @@ export default function ProtectedLayout() {
   const currentRoute = String(pathname || '');
   const isFullScreenPage = currentRoute.indexOf('take-test') !== -1;
   const showSidebar = isWeb && isLargeScreen && !isFullScreenPage;
+  
+
+  const backgroundColor = colorScheme === 'dark' ? '#1a1f2e' : '#f9fafb';
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center bg-white dark:bg-gray-900">
+      <View className="flex-1 justify-center items-center bg-background">
         <ActivityIndicator size="large" color="#3b82f6" />
       </View>
     );
@@ -48,11 +50,14 @@ export default function ProtectedLayout() {
         <AppSidebar />
 
         {/* Main Content Area */}
-        <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <View className="flex-1 bg-background">
           <Stack
             screenOptions={{
               headerShown: false,
-              animation: 'slide_from_right',
+              animation: 'default',
+              contentStyle: {
+                backgroundColor: backgroundColor
+              },
             }}
           >
             <Stack.Screen
@@ -79,12 +84,14 @@ export default function ProtectedLayout() {
   const Container = isWeb ? View : SafeAreaView;
   // Mobile layout without sidebar (uses bottom tabs)
   return (
-    <Container className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <Container className="flex-1 bg-background">
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'slide_from_right',
-          animationDuration: 20,
+          animation: 'default',
+          contentStyle: {
+            backgroundColor: backgroundColor
+          },
         }}
       >
         <Stack.Screen

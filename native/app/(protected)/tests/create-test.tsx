@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TextInput, Pressable, Platform } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, ScrollView, TextInput, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
@@ -9,6 +9,130 @@ import { ClipboardList, Calendar, Clock } from 'lucide-react-native';
 import { DateTimePicker } from '@/components/DateTimePicker';
 import { useCustomAlert } from '@/components/ui/custom-alert';
 import type { Course } from '@/lib/types';
+import SelectOption from '@/components/ui/select';
+import ToggleSwitch from '@/components/ui/switch';
+
+// ===== REUSABLE COMPONENTS =====
+
+interface SectionCardProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+const SectionCard: React.FC<SectionCardProps> = ({ title, children }) => (
+  <View className="bg-card rounded-xl p-4 mb-4 border border-border">
+    <Text className="text-lg font-bold mb-4">{title}</Text>
+    {children}
+  </View>
+);
+
+interface FormInputProps {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  multiline?: boolean;
+  numberOfLines?: number;
+  keyboardType?: 'default' | 'number-pad';
+  helpText?: string;
+}
+
+const FormInput: React.FC<FormInputProps> = ({
+  label,
+  placeholder,
+  value,
+  onChangeText,
+  multiline = false,
+  numberOfLines = 1,
+  keyboardType = 'default',
+  helpText
+}) => (
+  <View>
+    <Text className="text-sm font-semibold mb-2">{label}</Text>
+    <TextInput
+      className="bg-background border border-border rounded-xl px-4 py-3 text-foreground"
+      placeholder={placeholder}
+      value={value}
+      onChangeText={onChangeText}
+      multiline={multiline}
+      numberOfLines={multiline ? numberOfLines : undefined}
+      textAlignVertical={multiline ? "top" : "auto"}
+      keyboardType={keyboardType}
+    />
+    {helpText && (
+      <Text className="text-xs text-muted-foreground mt-1">{helpText}</Text>
+    )}
+  </View>
+);
+
+interface NumberInputProps {
+  label: string;
+  placeholder: string;
+  value: number;
+  onChangeValue: (value: number) => void;
+  helpText?: string;
+}
+
+const NumberInput: React.FC<NumberInputProps> = ({
+  label,
+  placeholder,
+  value,
+  onChangeValue,
+  helpText
+}) => (
+  <View className="flex-1">
+    <Text className="text-sm font-semibold mb-2">{label}</Text>
+    <TextInput
+      className="bg-background border border-border rounded-xl px-4 py-3 text-foreground text-center"
+      placeholder={placeholder}
+      value={value.toString()}
+      onChangeText={(text) => onChangeValue(parseInt(text) || 0)}
+      keyboardType="number-pad"
+    />
+    {helpText && (
+      <Text className="text-xs text-muted-foreground mt-1">{helpText}</Text>
+    )}
+  </View>
+);
+
+
+
+interface ButtonGroupOption {
+  value: string;
+  label: string;
+}
+
+interface ButtonGroupProps {
+  options: ButtonGroupOption[];
+  selectedValue: string;
+  onSelect: (value: string) => void;
+}
+
+const ButtonGroup: React.FC<ButtonGroupProps> = ({
+  options,
+  selectedValue,
+  onSelect
+}) => (
+  <View className="flex-row gap-2">
+    {options.map((option) => (
+      <Pressable
+        key={option.value}
+        onPress={() => onSelect(option.value)}
+        className={`flex-1 py-3 rounded-xl border ${selectedValue === option.value
+          ? 'bg-primary border-primary'
+          : 'bg-background border-border'
+          }`}
+      >
+        <Text className={`text-center text-sm ${selectedValue === option.value ? 'text-white font-semibold' : 'text-foreground'
+          }`}>
+          {option.label}
+        </Text>
+      </Pressable>
+    ))}
+  </View>
+);
+
+// ===== MAIN COMPONENT =====
 
 export default function CreateTestScreen() {
   const user = useAuthStore((state) => state.user);
@@ -19,7 +143,7 @@ export default function CreateTestScreen() {
 
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   const [testData, setTestData] = useState({
     title: '',
     description: '',
@@ -38,26 +162,26 @@ export default function CreateTestScreen() {
     questions_to_ask: null as number | null, // Number of questions to randomly select
     show_review_to_students: false // Whether students can see review/answers
   });
-  
+
   // Date/Time picker states
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date(Date.now() + 3600000)); // 1 hour later
-
-  useEffect(() => {
-    if (courseId) {
-      loadCourseData();
-    }
-  }, [courseId]);
-
-  const loadCourseData = async () => {
+  const loadCourseData = useCallback(async () => {
     if (!courseId) return;
     try {
       const courseRes = await courseAPI.getById(courseId);
       setCourse(courseRes.data.course);
-    } catch (error) {
+    } catch {
       showAlert('Error', 'Failed to load course data');
     }
-  };
+  }, [courseId, showAlert]);
+  useEffect(() => {
+    if (courseId) {
+      loadCourseData();
+    }
+  }, [courseId, loadCourseData]);
+
+
 
   const handleCreateTest = async () => {
     if (!courseId) {
@@ -86,11 +210,11 @@ export default function CreateTestScreen() {
       const testId = testResponse.data.test.id;
 
       showAlert(
-        'Success', 
+        'Success',
         'Test created successfully! You can now add materials and questions.',
         [
-          { 
-            text: 'Add Materials & Questions', 
+          {
+            text: 'Add Materials & Questions',
             onPress: () => router.push(`/tests/test-details?id=${testId}`)
           },
           {
@@ -152,299 +276,194 @@ export default function CreateTestScreen() {
         </View>
 
         {/* Basic Info */}
-        <View className="bg-card rounded-xl p-4 mb-4 border border-border">
-          <Text className="text-lg font-bold mb-4">Test Details</Text>
-
+        <SectionCard title="Test Details">
           <View className="gap-4">
-            {/* Title */}
-            <View>
-              <Text className="text-sm font-semibold mb-2">Test Title *</Text>
-              <TextInput
-                className="bg-background border border-border rounded-xl px-4 py-3 text-foreground"
-                placeholder="e.g., Midterm Exam - Data Structures"
-                value={testData.title}
-                onChangeText={(text) => setTestData({...testData, title: text})}
-              />
-            </View>
+            <FormInput
+              label="Test Title *"
+              placeholder="e.g., Midterm Exam - Data Structures"
+              value={testData.title}
+              onChangeText={(text) => setTestData({ ...testData, title: text })}
+            />
 
-            {/* Description */}
-            <View>
-              <Text className="text-sm font-semibold mb-2">Description</Text>
-              <TextInput
-                className="bg-background border border-border rounded-xl px-4 py-3 text-foreground"
-                placeholder="Test description..."
-                value={testData.description}
-                onChangeText={(text) => setTestData({...testData, description: text})}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-              />
-            </View>
+            <FormInput
+              label="Description"
+              placeholder="Test description..."
+              value={testData.description}
+              onChangeText={(text) => setTestData({ ...testData, description: text })}
+              multiline
+              numberOfLines={3}
+            />
           </View>
-        </View>
+        </SectionCard>
 
         {/* Quiz Type */}
-        <View className="bg-card rounded-xl p-4 mb-4 border border-border">
-          <Text className="text-lg font-bold mb-4">Question Type</Text>
+        <SectionCard title="Question Type">
           <View className="gap-2">
             {quizTypes.map((type) => (
-              <Pressable
+              <SelectOption
                 key={type.value}
-                onPress={() => setTestData({...testData, quiz_type: type.value as any})}
-                className={`p-4 rounded-xl border ${
-                  testData.quiz_type === type.value
-                    ? 'bg-primary border-primary'
-                    : 'bg-background border-border'
-                }`}
-              >
-                <Text className={`font-semibold ${testData.quiz_type === type.value ? 'text-white' : 'text-foreground'}`}>
-                  {type.label}
-                </Text>
-                <Text className={`text-sm ${testData.quiz_type === type.value ? 'text-white/80' : 'text-muted-foreground'}`}>
-                  {type.desc}
-                </Text>
-              </Pressable>
+                value={type.value}
+                label={type.label}
+                description={type.desc}
+                selected={testData.quiz_type === type.value}
+                onPress={() => setTestData({ ...testData, quiz_type: type.value as any })}
+              />
             ))}
           </View>
-        </View>
+        </SectionCard>
 
         {/* Test Type */}
-        <View className="bg-card rounded-xl p-4 mb-4 border border-border">
-          <Text className="text-lg font-bold mb-4">Availability Type</Text>
+        <SectionCard title="Availability Type">
           <View className="gap-2">
             {testTypes.map((type) => (
-              <Pressable
+              <SelectOption
                 key={type.value}
-                onPress={() => setTestData({...testData, test_type: type.value as any})}
-                className={`p-4 rounded-xl border flex-row items-center ${
-                  testData.test_type === type.value
-                    ? 'bg-primary border-primary'
-                    : 'bg-background border-border'
-                }`}
-              >
-                <type.icon 
-                  size={24} 
-                  color={testData.test_type === type.value ? '#ffffff' : '#666666'} 
-                />
-                <View className="ml-3 flex-1">
-                  <Text className={`font-semibold ${testData.test_type === type.value ? 'text-white' : 'text-foreground'}`}>
-                    {type.label}
-                  </Text>
-                  <Text className={`text-sm ${testData.test_type === type.value ? 'text-white/80' : 'text-muted-foreground'}`}>
-                    {type.desc}
-                  </Text>
-                </View>
-              </Pressable>
+                value={type.value}
+                label={type.label}
+                description={type.desc}
+                icon={type.icon}
+                selected={testData.test_type === type.value}
+                onPress={() => setTestData({ ...testData, test_type: type.value as any })}
+              />
             ))}
           </View>
-        </View>
+        </SectionCard>
 
         {/* Test Settings */}
-        <View className="bg-card rounded-xl p-4 mb-4 border border-border">
-          <Text className="text-lg font-bold mb-4">Test Settings</Text>
-
+        <SectionCard title="Test Settings">
           <View className="gap-4">
             {/* Duration and Passing Score */}
             <View className="flex-row gap-2">
-              <View className="flex-1">
-                <Text className="text-sm font-semibold mb-2">Duration (min)</Text>
-                <TextInput
-                  className="bg-background border border-border rounded-xl px-4 py-3 text-foreground text-center"
-                  placeholder="60"
-                  value={testData.duration_minutes.toString()}
-                  onChangeText={(text) => setTestData({...testData, duration_minutes: parseInt(text) || 60})}
-                  keyboardType="number-pad"
-                />
-              </View>
+              <NumberInput
+                label="Duration (min)"
+                placeholder="60"
+                value={testData.duration_minutes}
+                onChangeValue={(value) => setTestData({ ...testData, duration_minutes: value || 60 })}
+              />
 
-              <View className="flex-1">
-                <Text className="text-sm font-semibold mb-2">Passing Score (%)</Text>
-                <TextInput
-                  className="bg-background border border-border rounded-xl px-4 py-3 text-foreground text-center"
-                  placeholder="60"
-                  value={testData.passing_score.toString()}
-                  onChangeText={(text) => setTestData({...testData, passing_score: parseInt(text) || 60})}
-                  keyboardType="number-pad"
-                />
-              </View>
+              <NumberInput
+                label="Passing Score (%)"
+                placeholder="60"
+                value={testData.passing_score}
+                onChangeValue={(value) => setTestData({ ...testData, passing_score: value || 60 })}
+              />
 
-              <View className="flex-1">
-                <Text className="text-sm font-semibold mb-2">Total Marks</Text>
-                <TextInput
-                  className="bg-background border border-border rounded-xl px-4 py-3 text-foreground text-center"
-                  placeholder="100"
-                  value={testData.total_marks.toString()}
-                  onChangeText={(text) => setTestData({...testData, total_marks: parseInt(text) || 100})}
-                  keyboardType="number-pad"
-                />
-              </View>
+              <NumberInput
+                label="Total Marks"
+                placeholder="100"
+                value={testData.total_marks}
+                onChangeValue={(value) => setTestData({ ...testData, total_marks: value || 100 })}
+              />
             </View>
 
             {/* Platform Restriction */}
             <View>
               <Text className="text-sm font-semibold mb-2">Platform Restriction</Text>
-              <View className="flex-row gap-2">
-                {platformOptions.map((option) => (
-                  <Pressable
-                    key={option.value}
-                    onPress={() => setTestData({...testData, platform_restriction: option.value as any})}
-                    className={`flex-1 py-3 rounded-xl border ${
-                      testData.platform_restriction === option.value
-                        ? 'bg-primary border-primary'
-                        : 'bg-background border-border'
-                    }`}
-                  >
-                    <Text className={`text-center text-sm ${
-                      testData.platform_restriction === option.value ? 'text-white font-semibold' : 'text-foreground'
-                    }`}>
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            {/* Max Attempts */}
-            <View>
-              <Text className="text-sm font-semibold mb-2">Maximum Attempts</Text>
-              <TextInput
-                className="bg-background border border-border rounded-xl px-4 py-3 text-foreground text-center"
-                placeholder="1"
-                value={testData.max_attempts.toString()}
-                onChangeText={(text) => setTestData({...testData, max_attempts: parseInt(text) || 1})}
-                keyboardType="number-pad"
+              <ButtonGroup
+                options={platformOptions}
+                selectedValue={testData.platform_restriction}
+                onSelect={(value) => setTestData({ ...testData, platform_restriction: value as any })}
               />
-              <Text className="text-xs text-muted-foreground mt-1">Number of times a student can attempt this test</Text>
             </View>
 
-            {/* Questions to Ask (Random Selection) */}
-            <View>
-              <Text className="text-sm font-semibold mb-2">Questions to Ask (Optional)</Text>
-              <TextInput
-                className="bg-background border border-border rounded-xl px-4 py-3 text-foreground text-center"
-                placeholder="Leave empty for all questions"
-                value={testData.questions_to_ask?.toString() || ''}
-                onChangeText={(text) => {
-                  const value = text.trim();
-                  setTestData({
-                    ...testData,
-                    questions_to_ask: value === '' ? null : parseInt(value) || null
-                  });
-                }}
-                keyboardType="number-pad"
-              />
-              <Text className="text-xs text-muted-foreground mt-1">
-                Number of questions to randomly select from the question pool. Leave empty to use all questions.
-              </Text>
-            </View>
+            <FormInput
+              label="Maximum Attempts"
+              placeholder="1"
+              value={testData.max_attempts.toString()}
+              onChangeText={(text) => setTestData({ ...testData, max_attempts: parseInt(text) || 1 })}
+              keyboardType="number-pad"
+              helpText="Number of times a student can attempt this test"
+            />
 
-            {/* Show Review to Students */}
-            <Pressable
-              onPress={() => setTestData({...testData, show_review_to_students: !testData.show_review_to_students})}
-              className="flex-row items-center justify-between py-3 px-4 bg-background rounded-xl border border-border"
-            >
-              <View className="flex-1 mr-3">
-                <Text className="font-semibold text-foreground">Show Review to Students</Text>
-                <Text className="text-sm text-muted-foreground">Allow students to view answers and explanations after completing the test</Text>
-              </View>
-              <View className={`w-12 h-6 rounded-full p-1 ${testData.show_review_to_students ? 'bg-primary' : 'bg-border'}`}>
-                <View className={`w-4 h-4 rounded-full bg-white transition-all ${testData.show_review_to_students ? 'ml-auto' : ''}`} />
-              </View>
-            </Pressable>
+            <FormInput
+              label="Questions to Ask (Optional)"
+              placeholder="Leave empty for all questions"
+              value={testData.questions_to_ask?.toString() || ''}
+              onChangeText={(text) => {
+                const value = text.trim();
+                setTestData({
+                  ...testData,
+                  questions_to_ask: value === '' ? null : parseInt(value) || null
+                });
+              }}
+              keyboardType="number-pad"
+              helpText="Number of questions to randomly select from the question pool. Leave empty to use all questions."
+            />
+
+            <ToggleSwitch
+              label="Show Review to Students"
+              description="Allow students to view answers and explanations after completing the test"
+              value={testData.show_review_to_students}
+              onToggle={() => setTestData({ ...testData, show_review_to_students: !testData.show_review_to_students })}
+            />
           </View>
-        </View>
+        </SectionCard>
 
         {/* Security & Monitoring */}
-        <View className="bg-card rounded-xl p-4 mb-4 border border-border">
-          <Text className="text-lg font-bold mb-4">Security & Monitoring</Text>
-
+        <SectionCard title="Security & Monitoring">
           <View className="gap-4">
-            {/* Window Switch Detection */}
-            <Pressable
-              onPress={() => setTestData({...testData, detect_window_switch: !testData.detect_window_switch})}
-              className="flex-row items-center justify-between py-3 px-4 bg-background rounded-xl border border-border"
-            >
-              <View className="flex-1 mr-3">
-                <Text className="font-semibold text-foreground">Detect Window Switching</Text>
-                <Text className="text-sm text-muted-foreground">Track when student switches to another window/app</Text>
-              </View>
-              <View className={`w-12 h-6 rounded-full p-1 ${testData.detect_window_switch ? 'bg-primary' : 'bg-border'}`}>
-                <View className={`w-4 h-4 rounded-full bg-white transition-all ${testData.detect_window_switch ? 'ml-auto' : ''}`} />
-              </View>
-            </Pressable>
+            <ToggleSwitch
+              label="Detect Window Switching"
+              description="Track when student switches to another window/app"
+              value={testData.detect_window_switch}
+              onToggle={() => setTestData({ ...testData, detect_window_switch: !testData.detect_window_switch })}
+            />
 
-            {/* Screenshot Prevention */}
-            <Pressable
-              onPress={() => setTestData({...testData, prevent_screenshot: !testData.prevent_screenshot})}
-              className="flex-row items-center justify-between py-3 px-4 bg-background rounded-xl border border-border"
-            >
-              <View className="flex-1 mr-3">
-                <Text className="font-semibold text-foreground">Prevent Screenshots</Text>
-                <Text className="text-sm text-muted-foreground">Block screenshot capture during test (mobile only)</Text>
-              </View>
-              <View className={`w-12 h-6 rounded-full p-1 ${testData.prevent_screenshot ? 'bg-primary' : 'bg-border'}`}>
-                <View className={`w-4 h-4 rounded-full bg-white transition-all ${testData.prevent_screenshot ? 'ml-auto' : ''}`} />
-              </View>
-            </Pressable>
+            <ToggleSwitch
+              label="Prevent Screenshots"
+              description="Block screenshot capture during test (mobile only)"
+              value={testData.prevent_screenshot}
+              onToggle={() => setTestData({ ...testData, prevent_screenshot: !testData.prevent_screenshot })}
+            />
 
-            {/* Phone Call Detection */}
-            <Pressable
-              onPress={() => setTestData({...testData, detect_phone_call: !testData.detect_phone_call})}
-              className="flex-row items-center justify-between py-3 px-4 bg-background rounded-xl border border-border"
-            >
-              <View className="flex-1 mr-3">
-                <Text className="font-semibold text-foreground">Detect Phone Calls</Text>
-                <Text className="text-sm text-muted-foreground">Monitor incoming/outgoing calls during test (mobile only)</Text>
-              </View>
-              <View className={`w-12 h-6 rounded-full p-1 ${testData.detect_phone_call ? 'bg-primary' : 'bg-border'}`}>
-                <View className={`w-4 h-4 rounded-full bg-white transition-all ${testData.detect_phone_call ? 'ml-auto' : ''}`} />
-              </View>
-            </Pressable>
+            <ToggleSwitch
+              label="Detect Phone Calls"
+              description="Monitor incoming/outgoing calls during test (mobile only)"
+              value={testData.detect_phone_call}
+              onToggle={() => setTestData({ ...testData, detect_phone_call: !testData.detect_phone_call })}
+            />
           </View>
-        </View>
+        </SectionCard>
 
-        {/* Test Settings continued */}
-        <View className="bg-card rounded-xl p-4 mb-4 border border-border">
-          <View className="gap-4">
-            {/* Time Window (for timed tests) */}
-            {testData.test_type === 'timed' && (
-              <>
-                <DateTimePicker
-                  label="Start Date & Time"
-                  value={startDate}
-                  onChange={(date) => {
-                    setStartDate(date);
-                    setTestData({
-                      ...testData, 
-                      start_time: date.toISOString()
-                    });
-                  }}
-                  mode="datetime"
-                  minimumDate={new Date()}
-                />
+        {/* Time Window (for timed tests) */}
+        {testData.test_type === 'timed' && (
+          <SectionCard title="Time Window">
+            <View className="gap-4">
+              <DateTimePicker
+                label="Start Date & Time"
+                value={startDate}
+                onChange={(date) => {
+                  setStartDate(date);
+                  setTestData({
+                    ...testData,
+                    start_time: date.toISOString()
+                  });
+                }}
+                mode="datetime"
+                minimumDate={new Date()}
+              />
 
-                <DateTimePicker
-                  label="End Date & Time"
-                  value={endDate}
-                  onChange={(date) => {
-                    setEndDate(date);
-                    setTestData({
-                      ...testData, 
-                      end_time: date.toISOString()
-                    });
-                  }}
-                  mode="datetime"
-                  minimumDate={startDate}
-                />
-              </>
-            )}
-          </View>
-        </View>
+              <DateTimePicker
+                label="End Date & Time"
+                value={endDate}
+                onChange={(date) => {
+                  setEndDate(date);
+                  setTestData({
+                    ...testData,
+                    end_time: date.toISOString()
+                  });
+                }}
+                mode="datetime"
+                minimumDate={startDate}
+              />
+            </View>
+          </SectionCard>
+        )}
 
         {/* Info Note */}
         <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4">
           <Text className="text-blue-800 dark:text-blue-200 text-sm">
-            💡 <Text className="font-semibold">Note:</Text> After creating the test, you'll be able to add materials and questions from the test details page.
+            💡 <Text className="font-semibold">Note:</Text> After creating the test, you&apos;ll be able to add materials and questions from the test details page.
           </Text>
         </View>
 

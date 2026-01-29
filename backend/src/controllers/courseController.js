@@ -11,6 +11,14 @@ exports.getAllCourses = async (req, res) => {
     const isTeacherOrAdmin = userRole === 'teacher' || userRole === 'admin';
     const showInactive = include_inactive === 'true' && isTeacherOrAdmin;
     
+    console.log('getAllCourses - User info:', { 
+      userId: req.user?.id,
+      userRole, 
+      isTeacherOrAdmin, 
+      include_inactive,
+      showInactive 
+    });
+    
     let query = `
       SELECT c.*, u.name as teacher_name,
         d.name as department_name, d.code as department_code,

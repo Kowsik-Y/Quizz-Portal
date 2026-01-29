@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Modal, Pressable, TextInput } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { X, Save } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 
 interface EditTestTitleModalProps {
   visible: boolean;
@@ -19,8 +18,6 @@ export const EditTestTitleModal: React.FC<EditTestTitleModalProps> = ({
   onSave,
   loading = false
 }) => {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const [title, setTitle] = useState(currentTitle);
 
   const handleSave = () => {
@@ -41,39 +38,33 @@ export const EditTestTitleModal: React.FC<EditTestTitleModalProps> = ({
         onPress={onClose}
       >
         <Pressable 
-          className={`w-full max-w-md rounded-xl p-6 ${
-            isDark ? 'bg-gray-900 border border-gray-700' : 'bg-white border border-gray-200'
-          }`}
+          className="w-full max-w-md rounded-xl p-6 bg-card border border-border"
           onPress={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
-            <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <Text className="text-xl font-bold text-foreground">
               Edit Test Title
             </Text>
             <Pressable
               onPress={onClose}
-              className={`p-2 rounded-full ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}
+              className="p-2 rounded-full bg-muted"
             >
-              <X size={20} color={isDark ? '#9ca3af' : '#6b7280'} />
+              <X size={20} color="#6b7280" />
             </Pressable>
           </View>
 
           {/* Input */}
           <View className="mb-6">
-            <Text className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            <Text className="mb-2 font-medium text-foreground">
               Test Title
             </Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
               placeholder="Enter test title"
-              placeholderTextColor={isDark ? '#6b7280' : '#9ca3af'}
-              className={`px-4 py-3 rounded-lg border ${
-                isDark 
-                  ? 'bg-gray-800 border-gray-700 text-white' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              }`}
+              placeholderTextColor="#6b7280"
+              className="px-4 py-3 rounded-lg border bg-background border-border text-foreground"
               multiline
               numberOfLines={2}
             />
@@ -84,15 +75,9 @@ export const EditTestTitleModal: React.FC<EditTestTitleModalProps> = ({
             <Pressable
               onPress={onClose}
               disabled={loading}
-              className={`flex-1 py-3 rounded-lg border ${
-                isDark 
-                  ? 'border-gray-700 bg-gray-800' 
-                  : 'border-gray-300 bg-white'
-              }`}
+              className="flex-1 py-3 rounded-lg border border-border bg-muted"
             >
-              <Text className={`text-center font-semibold ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
-              }`}>
+              <Text className="text-center font-semibold text-foreground">
                 Cancel
               </Text>
             </Pressable>

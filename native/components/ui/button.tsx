@@ -24,9 +24,9 @@ const buttonVariants = cva(
           })
         ),
         outline: cn(
-          'border-border bg-background active:bg-accent dark:bg-input/30 dark:border-input dark:active:bg-input/50 border shadow-sm shadow-black/5',
+          'border-border dark:border-border dark:active:bg-background border shadow-sm shadow-black/5 text-primary group-active:bg-background dark:group-active:bg-background',
           Platform.select({
-            web: 'hover:bg-accent dark:hover:bg-input/50',
+            web: 'hover:bg-background dark:hover:bg-background focus-visible:ring-ring',
           })
         ),
         secondary: cn(
@@ -38,11 +38,24 @@ const buttonVariants = cva(
           Platform.select({ web: 'hover:bg-accent dark:hover:bg-accent/50' })
         ),
         link: '',
+        success: cn(
+          'bg-green-700 active:bg-green-600 shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-green-600' })
+        ),
+        warning: cn(
+          'bg-yellow-500 active:bg-yellow-600 shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-yellow-600' })
+        ),
+        info: cn(
+          'bg-blue-500 active:bg-blue-600 shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-blue-600' })
+        ),
       },
       size: {
         default: cn('h-10 px-4 py-2 sm:h-9', Platform.select({ web: 'has-[>svg]:px-3' })),
         sm: cn('h-9 gap-1.5 rounded-md px-3 sm:h-8', Platform.select({ web: 'has-[>svg]:px-2.5' })),
         lg: cn('h-11 rounded-md px-6 sm:h-10', Platform.select({ web: 'has-[>svg]:px-4' })),
+        xl: cn('h-14 rounded-lg px-8', Platform.select({ web: 'has-[>svg]:px-6' })),
         icon: 'h-10 w-10 sm:h-9 sm:w-9',
       },
     },
@@ -73,11 +86,15 @@ const buttonTextVariants = cva(
           'text-primary group-active:underline',
           Platform.select({ web: 'underline-offset-4 hover:underline group-hover:underline' })
         ),
+        success: 'text-white',
+        warning: 'text-white',
+        info: 'text-white',
       },
       size: {
         default: '',
-        sm: '',
-        lg: '',
+        sm: 'text-xs',
+        lg: 'text-base',
+        xl: 'text-lg',
         icon: '',
       },
     },

@@ -325,10 +325,12 @@ export default function AddQuestionsScreen() {
               <View>
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-sm font-semibold">Options *</Text>
-                  <Pressable onPress={addMCQOption} className="flex-row items-center gap-1">
-                    <Plus size={16} color="#666666" />
-                    <Text className="text-sm text-primary">Add Option</Text>
-                  </Pressable>
+                  <Button onPress={addMCQOption} variant="outline" size="sm">
+                    <View className="flex-row items-center gap-1">
+                      <Plus size={16} color="#666666" />
+                      <Text className="text-sm text-primary">Add Option</Text>
+                    </View>
+                  </Button>
                 </View>
 
                 {mcqData.options.map((option, index) => (
@@ -350,9 +352,9 @@ export default function AddQuestionsScreen() {
                     />
 
                     {mcqData.options.length > 2 && (
-                      <Pressable onPress={() => removeMCQOption(index)}>
+                      <Button onPress={() => removeMCQOption(index)} variant="ghost" size="sm">
                         <Trash2 size={20} color="#ef4444" />
-                      </Pressable>
+                      </Button>
                     )}
                   </View>
                 ))}
@@ -440,10 +442,12 @@ export default function AddQuestionsScreen() {
               <View>
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-sm font-semibold">Test Cases *</Text>
-                  <Pressable onPress={addTestCase} className="flex-row items-center gap-1">
-                    <Plus size={16} color="#666666" />
-                    <Text className="text-sm text-primary">Add Test Case</Text>
-                  </Pressable>
+                  <Button onPress={addTestCase} variant="outline" size="sm">
+                    <View className="flex-row items-center gap-1">
+                      <Plus size={16} color="#666666" />
+                      <Text className="text-sm text-primary">Add Test Case</Text>
+                    </View>
+                  </Button>
                 </View>
 
                 {codeData.test_cases.map((testCase, index) => (
@@ -451,9 +455,9 @@ export default function AddQuestionsScreen() {
                     <View className="flex-row items-center justify-between mb-2">
                       <Text className="font-semibold">Test Case {index + 1}</Text>
                       {codeData.test_cases.length > 1 && (
-                        <Pressable onPress={() => removeTestCase(index)}>
+                        <Button onPress={() => removeTestCase(index)} variant="ghost" size="sm">
                           <Trash2 size={18} color="#ef4444" />
-                        </Pressable>
+                        </Button>
                       )}
                     </View>
 

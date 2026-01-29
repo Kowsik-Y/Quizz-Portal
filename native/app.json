@@ -1,49 +1,51 @@
 {
   "expo": {
-    "name": "Quiz Portal",
-    "slug": "quiz-portal",
+    "name": "quiz",
+    "slug": "quiz",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "quiz-portal",
+    "scheme": "quiz",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/react-native-reusables-light.png",
+        "backgroundImage": "./assets/images/react-native-reusables-dark.png",
+        "monochromeImage": "./assets/images/react-native-reusables-dark.png"
       },
-      "permissions": ["READ_PHONE_STATE", "READ_CALL_LOG", "READ_CONTACTS"],
-      "package": "com.kowsik_y.quizportal"
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "web": {
-      "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router",
       [
-        "expo-font",
+        "expo-splash-screen",
         {
-          "fonts": [
-            "node_modules/@expo-google-fonts/jetbrains-mono/500Medium/JetBrainsMono_500Medium.ttf"
-          ]
+          "image": "./assets/images/splash.png",
+          "imageWidth": 100,
+          "resizeMode": "contain",
+          "backgroundColor": "#f9fafb'",
+          "dark": {
+            "image": "./assets/images/splash.png",
+            "backgroundColor": "#111827"
+          }
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "reactCompiler": true
     }
   }
 }
