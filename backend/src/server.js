@@ -124,35 +124,35 @@ app.get("/verify-certificate", async (req, res) => {
 	try {
 		const result = await certificateService.verifyCertificate(code);
 		if (!result.valid) {
-			return res
-				.status(404)
-				.send(`<h1>Certificate Not Found</h1><p>${code}</p>`);
-		}
-		const cert = result.certificate;
-		// Render a minimal HTML verification page
-		return res.send(`
-			<html>
-			<head><title>Certificate Verification</title></head>
-			<body style="font-family:Arial,Helvetica,sans-serif;padding:24px;">
-				<h1>Certificate Verified</h1>
-				<p><strong>Code:</strong> ${cert.certificate_code}</p>
-				<p><strong>Student:</strong> ${cert.student_name}</p>
-				<p><strong>Test:</strong> ${cert.test_title}</p>
-				<p><strong>Score:</strong> ${cert.score}/${cert.total_points} (${cert.percentage}%)</p>
-				<p><strong>Issued:</strong> ${new Date(cert.issued_at).toLocaleString()}</p>
-				<p><strong>Verified:</strong> ${new Date().toLocaleString()}</p>
-			</body>
-			</html>
-		`);
-	} catch (error) {
-		console.error("Verify certificate page error:", error);
-		return res.status(500).send("Failed to verify certificate");
-	}
-});
-
-// API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+			// app.use(
+			//      cors({
+			//              origin: (origin, callback) => {
+			//                      // Allow requests with no origin (like mobile apps or Postman)
+			//                      if (!origin) return callback(null, true);
+			//
+			//                      // List of allowed origins
+			//                      const allowedOrigins = [
+			//                              "http://localhost:8081",
+			//                              "http://192.168.1.1:8081",
+			//                              "http://127.0.0.1:8081",
+			//                              process.env.FRONTEND_URL,
+			//                      ].filter(Boolean);
+			//                      if (
+			//                              allowedOrigins.indexOf(origin) !== -1 ||
+			//                              origin.startsWith("http://localhost") ||
+			//                              origin.startsWith("http://192.168")
+			//                      ) {
+			//                              callback(null, true);
+			//                      } else {
+			//                              callback(null, true); // Allow all in development
+			//                      }
+			//              },
+			//              credentials: true,
+			//              methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+			//              allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+			//              exposedHeaders: ["Set-Cookie"],
+			//      }),
+			// );
 app.use("/api/departments", departmentRoutes);
 app.use("/api/academic-years", academicYearRoutes);
 app.use("/api/courses", courseRoutes);
