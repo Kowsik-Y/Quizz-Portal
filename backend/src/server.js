@@ -85,17 +85,19 @@ app.use(
 				"http://localhost:8081",
 				"http://192.168.1.1:8081",
 				"http://127.0.0.1:8081",
+				"https://quizz-portal.vercel.app",
 				process.env.FRONTEND_URL,
 			].filter(Boolean);
 
 			if (
-				allowedOrigins.indexOf(origin) !== -1 ||
-				origin.startsWith("http://localhost") ||
-				origin.startsWith("http://192.168")
+				allowedOrigins.includes(origin) ||
+				(!isProduction &&
+					(origin.startsWith("http://localhost") ||
+						origin.startsWith("http://192.168")))
 			) {
 				callback(null, true);
 			} else {
-				callback(null, true); // Allow all in development
+				callback(new Error("Not allowed by CORS"));
 			}
 		},
 		credentials: true,
