@@ -74,14 +74,7 @@ app.use(
 app.use(cookieParser()); // Parse cookies before CORS
 app.use(compression()); // Enable gzip compression
 app.use(limiter); // Apply rate limiting
-app.use(
-	cors({
-		credentials: true,
-		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-		exposedHeaders: ["Set-Cookie"],
-	}),
-);
+
 app.use(morgan(isProduction ? "combined" : "dev")); // Use combined format in production
 app.use(express.json({ limit: "10mb" })); // Limit JSON payload size
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -300,4 +293,5 @@ process.on("SIGINT", () => {
 });
 
 module.exports = app;
+
 
