@@ -1,51 +1,59 @@
 {
-  "expo": {
-    "name": "quiz",
-    "slug": "quiz",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "quiz",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/react-native-reusables-light.png",
-        "backgroundImage": "./assets/images/react-native-reusables-dark.png",
-        "monochromeImage": "./assets/images/react-native-reusables-dark.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png",
-      "bundler": "metro"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash.png",
-          "imageWidth": 100,
-          "resizeMode": "contain",
-          "backgroundColor": "#f9fafb'",
-          "dark": {
-            "image": "./assets/images/splash.png",
-            "backgroundColor": "#111827"
-          }
-        }
-      ],
-      "@react-native-community/datetimepicker"
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
-  }
+	"expo": {
+		"name": "quiz",
+		"slug": "quiz",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"icon": "./assets/images/icon.png",
+		"scheme": "quiz",
+		"userInterfaceStyle": "automatic",
+		"newArchEnabled": true,
+		"ios": {
+			"supportsTablet": true
+		},
+		"androidStatusBar": {
+			"backgroundColor": "#FFFFFF"
+		},
+		"android": {
+			"adaptiveIcon": {
+				"backgroundColor": "#E6F4FE",
+				"foregroundImage": "./assets/images/icon.png"
+			},
+			"edgeToEdgeEnabled": true,
+			"predictiveBackGestureEnabled": false,
+			"package": "com.kowsiky.quiz"
+		},
+		"web": {
+			"output": "static",
+			"favicon": "./assets/images/favicon.png",
+			"bundler": "metro"
+		},
+		"plugins": [
+			"expo-router",
+			[
+				"expo-splash-screen",
+				{
+					"image": "./assets/images/splash.png",
+					"imageWidth": 100,
+					"resizeMode": "contain",
+					"backgroundColor": "#f9fafb",
+					"dark": {
+						"image": "./assets/images/splash.png",
+						"backgroundColor": "#111827"
+					}
+				}
+			],
+			"@react-native-community/datetimepicker"
+		],
+		"experiments": {
+			"typedRoutes": true,
+			"reactCompiler": true
+		},
+		"extra": {
+			"router": {},
+			"eas": {
+				"projectId": "b0030801-a7bf-472c-9ce4-ad28efa75361"
+			}
+		}
+	}
 }
