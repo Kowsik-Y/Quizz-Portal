@@ -37,7 +37,7 @@ export function CertificateView({ certificateId }: CertificateViewProps) {
 		loadCertificate();
 
 		// normalize pdfUrl when certificate loads
-		return () => {};
+		return () => { };
 	}, [certificateId]);
 
 	// Ensure pdfUrl is absolute and points to a .pdf when possible
@@ -134,7 +134,7 @@ export function CertificateView({ certificateId }: CertificateViewProps) {
 				to =
 					window.prompt(
 						"Enter recipient email (leave empty to send to student):",
-						certificate.student_email || "",
+						String(certificate.student_id) || "",
 					) || undefined;
 			}
 
@@ -249,138 +249,138 @@ export function CertificateView({ certificateId }: CertificateViewProps) {
 				) : (
 					// Show styled HTML certificate preview when no PDF is embedded
 					<View
-							className={`rounded-2xl p-6 mb-6 ${isDark ? "bg-gray-900 border border-gray-700" : "bg-white border border-gray-200"}`}
-							style={{ fontFamily: "Inter, Arial, sans-serif" }}
+						className={`rounded-2xl p-6 mb-6 ${isDark ? "bg-gray-900 border border-gray-700" : "bg-white border border-gray-200"}`}
+					// ...existing code...
+					>
+						<View
+							className={`rounded-lg p-4 mb-4 ${isDark ? "bg-gradient-to-r from-yellow-700 to-yellow-500" : "bg-gradient-to-r from-yellow-200 to-yellow-50"}`}
 						>
-							<View
-								className={`rounded-lg p-4 mb-4 ${isDark ? "bg-gradient-to-r from-yellow-700 to-yellow-500" : "bg-gradient-to-r from-yellow-200 to-yellow-50"}`}
+							<View className="items-center">
+								<Award size={72} color={isDark ? "#fff" : "#b45309"} />
+							</View>
+							<Text
+								className={`text-center font-extrabold ${isDark ? "text-white" : "text-amber-800"}`}
+								style={{ fontSize: 22, letterSpacing: 1.2 }}
 							>
-								<View className="items-center">
-									<Award size={72} color={isDark ? "#fff" : "#b45309"} />
-								</View>
-								<Text
-									className={`text-center font-extrabold ${isDark ? "text-white" : "text-amber-800"}`}
-									style={{ fontSize: 22, letterSpacing: 1.2 }}
+								Certificate of Achievement
+							</Text>
+						</View>
+
+						<View className="items-center mb-4">
+							<Text
+								className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}
+							>
+								This certifies that
+							</Text>
+							<Text
+								className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+								style={{ fontSize: 30, marginTop: 8 }}
+							>
+								{certificate.student_name || "Student"}
+							</Text>
+							<Text
+								className={`text-base mt-3 ${isDark ? "text-gray-300" : "text-gray-700"}`}
+							>
+								has successfully completed
+							</Text>
+							<Text
+								className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
+								style={{ fontSize: 20, marginTop: 6 }}
+							>
+								{certificate.test_title || "Test"}
+							</Text>
+						</View>
+
+						<View className="flex-row items-center justify-center gap-4 mb-6">
+							{certificate.percentage !== undefined && (
+								<View
+									className={`px-6 py-3 rounded-full ${isDark ? "bg-green-800/20" : "bg-green-50"}`}
 								>
-									Certificate of Achievement
+									<Text
+										className={`text-2xl font-bold ${isDark ? "text-green-300" : "text-green-700"}`}
+									>
+										{certificate.percentage}%
+									</Text>
+								</View>
+							)}
+							<View>
+								<Text
+									className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
+								>
+									Score
+								</Text>
+								<Text
+									className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}
+								>
+									{certificate.score}/{certificate.total_points}
+								</Text>
+							</View>
+						</View>
+
+						<View className="mt-4 pt-4 border-t border-gray-200 flex-row justify-between items-center">
+							<View>
+								<Text
+									className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}
+								>
+									Issued
+								</Text>
+								<Text
+									className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}
+								>
+									{new Date(certificate.issued_at).toLocaleDateString()}
 								</Text>
 							</View>
 
-							<View className="items-center mb-4">
+							<View className="items-center">
 								<Text
-									className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}
+									className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}
 								>
-									This certifies that
+									Verified
 								</Text>
-								<Text
-									className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}
-									style={{ fontSize: 30, marginTop: 8 }}
-								>
-									{certificate.student_name || "Student"}
-								</Text>
-								<Text
-									className={`text-base mt-3 ${isDark ? "text-gray-300" : "text-gray-700"}`}
-								>
-									has successfully completed
-								</Text>
-								<Text
-									className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
-									style={{ fontSize: 20, marginTop: 6 }}
-								>
-									{certificate.test_title || "Test"}
-								</Text>
-							</View>
-
-							<View className="flex-row items-center justify-center gap-4 mb-6">
-								{certificate.percentage !== undefined && (
-									<View
-										className={`px-6 py-3 rounded-full ${isDark ? "bg-green-800/20" : "bg-green-50"}`}
-									>
-										<Text
-											className={`text-2xl font-bold ${isDark ? "text-green-300" : "text-green-700"}`}
-										>
-											{certificate.percentage}%
-										</Text>
-									</View>
-								)}
-								<View>
-									<Text
-										className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
-									>
-										Score
-									</Text>
-									<Text
-										className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}
-									>
-										{certificate.score}/{certificate.total_points}
-									</Text>
-								</View>
-							</View>
-
-							<View className="mt-4 pt-4 border-t border-gray-200 flex-row justify-between items-center">
-								<View>
-									<Text
-										className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}
-									>
-										Issued
-									</Text>
-									<Text
-										className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}
-									>
-										{new Date(certificate.issued_at).toLocaleDateString()}
-									</Text>
-								</View>
-
-								<View className="items-center">
-									<Text
-										className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}
-									>
-										Verified
-									</Text>
-									<View className="flex-row items-center">
-										<CheckCircle2
-											size={18}
-											color={isDark ? "#86efac" : "#16a34a"}
-										/>
-										<Text
-											className={`ml-2 text-sm font-semibold ${isDark ? "text-green-300" : "text-green-700"}`}
-										>
-											Verified Certificate
-										</Text>
-									</View>
-								</View>
-							</View>
-
-							<View className="mt-6 flex-row justify-between items-end">
-								<View>
-									<Text
-										className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}
-									>
-										Issuer
-									</Text>
-									<Text
-										className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
-									>
-										Quiz Portal
-									</Text>
-								</View>
-
-								<View style={{ alignItems: "center" }}>
-									<View
-										style={{
-											borderTopWidth: 1,
-											width: 180,
-											borderColor: isDark ? "#374151" : "#d1d5db",
-										}}
+								<View className="flex-row items-center">
+									<CheckCircle2
+										size={18}
+										color={isDark ? "#86efac" : "#16a34a"}
 									/>
 									<Text
-										className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}
+										className={`ml-2 text-sm font-semibold ${isDark ? "text-green-300" : "text-green-700"}`}
 									>
-										Signature
+										Verified Certificate
 									</Text>
 								</View>
 							</View>
 						</View>
+
+						<View className="mt-6 flex-row justify-between items-end">
+							<View>
+								<Text
+									className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}
+								>
+									Issuer
+								</Text>
+								<Text
+									className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
+								>
+									Quiz Portal
+								</Text>
+							</View>
+
+							<View style={{ alignItems: "center" }}>
+								<View
+									style={{
+										borderTopWidth: 1,
+										width: 180,
+										borderColor: isDark ? "#374151" : "#d1d5db",
+									}}
+								/>
+								<Text
+									className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}
+								>
+									Signature
+								</Text>
+							</View>
+						</View>
+					</View>
 				)}
 
 				<Text

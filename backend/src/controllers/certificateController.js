@@ -12,14 +12,8 @@ async function createPdfForCertificate(cert, filename, req) {
 	const fs = require("fs");
 	const path = require("path");
 
-	const uploadsDir = path.join(
-		__dirname,
-		"..",
-		"..",
-		"uploads",
-		"certificates",
-	);
-	await fs.promises.mkdir(uploadsDir, { recursive: true });
+	   const uploadsDir = '/tmp/uploads';
+	   await fs.promises.mkdir(uploadsDir, { recursive: true });
 
 	const filepath = path.join(uploadsDir, filename);
 
