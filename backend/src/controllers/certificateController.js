@@ -692,9 +692,13 @@ exports.getMyCertificates = async (req, res) => {
 				cert.total_points > 0
 					? Math.round((parseFloat(cert.score) / cert.total_points) * 100)
 					: 0;
-			// Ensure pdf_url and badge_url are absolute
+			// Ensure pdf_url and badge_url are absolute, and fix old localhost URLs
 			const makeAbsolute = (url) => {
 				if (!url) return null;
+				// If URL points to our uploads folder, replace the origin with current baseUrl
+				const match = url.match(/(\/uploads\/.*)$/);
+				if (match) return `${baseUrl.replace(/\/$/, "")}${match[1]}`;
+				
 				if (/^https?:\/\//i.test(url)) return url;
 				// If url already starts with /, prefix host
 				if (url.startsWith("/")) return `${baseUrl.replace(/\/$/, "")}${url}`;
@@ -805,9 +809,13 @@ exports.getCertificateById = async (req, res) => {
 			);
 		}
 
-		// Build absolute urls for response
+		// Build absolute urls for response, mapping old localhost URLs to current host
 		const makeAbsolute = (url) => {
 			if (!url) return null;
+			// If URL points to our uploads folder, replace the origin with current baseUrl
+			const match = url.match(/(\/uploads\/.*)$/);
+			if (match) return `${baseUrl.replace(/\/$/, "")}${match[1]}`;
+
 			if (/^https?:\/\//i.test(url)) return url;
 			if (url.startsWith("/")) return `${baseUrl.replace(/\/$/, "")}${url}`;
 			return `${baseUrl.replace(/\/$/, "")}/${url.replace(/^\//, "")}`;
