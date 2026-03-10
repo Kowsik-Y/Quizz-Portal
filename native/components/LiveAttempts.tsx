@@ -24,6 +24,7 @@ import {
 import { Text } from "@/components/ui/text";
 import { attemptAPI } from "@/lib/api";
 import { showToast } from "@/lib/toast";
+import { useSocket } from "@/lib/useSocket";
 
 interface Attempt {
 	id: number;
@@ -64,6 +65,19 @@ export default function LiveAttempts({
 	const [refreshing, setRefreshing] = useState(false);
 	const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 	const [accessDenied, setAccessDenied] = useState(false);
+
+	// WebSocket hook
+	const { isConnected, latestData } = useSocket(testId);
+
+	// Handle incoming WebSocket data
+	useEffect(() => {
+		if (latestData) {
+			setAttempts(latestData.attempts || []);
+			setLiveCount(latestData.live_count || 0);
+			setCompletedCount(latestData.completed_count || 0);
+			setLastUpdated(new Date());
+		}
+	}, [latestData]);
 
 	const loadAttempts = useCallback(
 		async (isRefresh = false) => {
@@ -117,8 +131,8 @@ export default function LiveAttempts({
 		// Initial load
 		safeLoadAttempts();
 
-		// Auto-refresh if enabled
-		if (autoRefresh) {
+		// Auto-refresh if enabled AND websocket is not connected
+		if (autoRefresh && !isConnected) {
 			interval = setInterval(() => {
 				safeLoadAttempts(true);
 			}, refreshInterval * 1000);
@@ -131,7 +145,7 @@ export default function LiveAttempts({
 				clearInterval(interval);
 			}
 		};
-	}, [autoRefresh, refreshInterval, loadAttempts]);
+	}, [autoRefresh, refreshInterval, loadAttempts, isConnected]);
 
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
@@ -310,15 +324,14 @@ export default function LiveAttempts({
 										`/tests/attempt-detail?attemptId=${attempt.id}` as any,
 									)
 								}
-								className={`rounded-xl p-4 border ${
-									attempt.status === "in_progress"
+								className={`rounded-xl p-4 border ${attempt.status === "in_progress"
 										? isDark
 											? "bg-green-900/10 border-green-700/50"
 											: "bg-green-50 border-green-200"
 										: isDark
 											? "bg-gray-800 border-gray-700"
 											: "bg-white border-gray-200"
-								}`}
+									}`}
 							>
 								{/* Student Info */}
 								<View className="flex-row items-start justify-between mb-3">
@@ -347,26 +360,24 @@ export default function LiveAttempts({
 
 									{/* Status Badge */}
 									<View
-										className={`px-3 py-1 rounded-full ${
-											attempt.status === "in_progress"
+										className={`px-3 py-1 rounded-full ${attempt.status === "in_progress"
 												? isDark
 													? "bg-green-900/30"
 													: "bg-green-100"
 												: isDark
 													? "bg-blue-900/30"
 													: "bg-blue-100"
-										}`}
+											}`}
 									>
 										<Text
-											className={`text-xs font-semibold ${
-												attempt.status === "in_progress"
+											className={`text-xs font-semibold ${attempt.status === "in_progress"
 													? isDark
 														? "text-green-300"
 														: "text-green-700"
 													: isDark
 														? "text-blue-300"
 														: "text-blue-700"
-											}`}
+												}`}
 										>
 											{attempt.status === "in_progress" ? "🟢 Live" : "✅ Done"}
 										</Text>
@@ -500,14 +511,19 @@ export default function LiveAttempts({
 			{/* Auto-refresh indicator */}
 			{autoRefresh && (
 				<View
-					className={`p-2 border-t ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+					className={`p-2 border-t flex-row items-center justify-center gap-2 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
 				>
-					<Text
-						className={`text-xs text-center ${isDark ? "text-gray-500" : "text-gray-500"}`}
-					>
-						🔄 Auto-refreshing every {refreshInterval}s • Pull down to refresh
-						manually
-					</Text>
+					{isConnected ? (
+						<Text className={`text-xs text-center font-medium ${isDark ? "text-green-400" : "text-green-600"}`}>
+							⚡ Live updates active
+						</Text>
+					) : (
+						<Text
+							className={`text-xs text-center ${isDark ? "text-gray-500" : "text-gray-500"}`}
+						>
+							🔄 Polling every {refreshInterval}s • Pull down to refresh manually
+						</Text>
+					)}
 				</View>
 			)}
 		</View>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TextInput, Platform } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -7,12 +7,15 @@ import { useRouter } from 'expo-router';
 import { User, Mail, Lock, Shield, Users, GraduationCap, Hash, Building } from 'lucide-react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useCustomAlert } from '@/components/ui/custom-alert';
+import { authAPI, departmentAPI } from '@/lib/api';
+import type { Department } from '@/lib/types';
 
 export default function CreateUserScreen() {
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
   const { showAlert } = useCustomAlert();
   const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -20,9 +23,25 @@ export default function CreateUserScreen() {
     password: '',
     role: 'student' as 'admin' | 'teacher' | 'student',
     rollNumber: '',
-    department: 'CSE' as 'CSE' | 'IT' | 'ECE' | 'MECH' | 'CIVIL'
+    department_id: null as number | null
   });
 
+  useEffect(() => {
+    loadDepartments();
+  }, []);
+
+  const loadDepartments = async () => {
+    try {
+      const res = await departmentAPI.getAll();
+      const depts = res.data.departments || [];
+      setDepartments(depts);
+      if (depts.length > 0) {
+        setFormData(prev => ({ ...prev, department_id: depts[0].id }));
+      }
+    } catch (error) {
+      console.error('Failed to load departments:', error);
+    }
+  };
 
   // Only admin can access this page
   if (user?.role !== 'admin') {
@@ -57,6 +76,15 @@ export default function CreateUserScreen() {
     setLoading(true);
 
     try {
+      await authAPI.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        roll_number: formData.role === 'student' ? formData.rollNumber : undefined,
+        department_id: formData.department_id ?? undefined
+      });
+
       showAlert(
         'Success',
         `User ${formData.name} created successfully!`,
@@ -69,7 +97,7 @@ export default function CreateUserScreen() {
               password: '',
               role: 'student',
               rollNumber: '',
-              department: 'CSE'
+              department_id: departments.length > 0 ? departments[0].id : null
             });
           }
         }]
@@ -87,6 +115,12 @@ export default function CreateUserScreen() {
       case 'teacher': return <Users size={20} color="#22c55e" />;
       case 'student': return <GraduationCap size={20} color="#3b82f6" />;
     }
+  };
+
+  const getDepartmentName = (id: number | null) => {
+    if (!id) return 'None';
+    const dept = departments.find(d => d.id === id);
+    return dept ? `${dept.name} (${dept.code})` : 'Unknown';
   };
 
   return (
@@ -186,39 +220,37 @@ export default function CreateUserScreen() {
               <Building size={20} color="#666666" />
               <View className="flex-1 ml-3">
                 <Picker
-                  selectedValue={formData.department}
-                  onValueChange={(value: 'CSE' | 'IT' | 'ECE' | 'MECH' | 'CIVIL') =>
-                    setFormData(prev => ({ ...prev, department: value }))
+                  selectedValue={formData.department_id}
+                  onValueChange={(value: number | null) =>
+                    setFormData(prev => ({ ...prev, department_id: value }))
                   }
                   style={{ color: '#ffffff' }}
                 >
-                  <Picker.Item label="Computer Science (CSE)" value="CSE" />
-                  <Picker.Item label="Information Technology (IT)" value="IT" />
-                  <Picker.Item label="Electronics (ECE)" value="ECE" />
-                  <Picker.Item label="Mechanical (MECH)" value="MECH" />
-                  <Picker.Item label="Civil (CIVIL)" value="CIVIL" />
+                  {departments.map((dept) => (
+                    <Picker.Item key={dept.id} label={`${dept.name} (${dept.code})`} value={dept.id} />
+                  ))}
                 </Picker>
               </View>
             </View>
           </View>
 
           {/* Roll Number */}
-            <View>
-              <Text className="text-sm font-semibold mb-2 text-foreground">
-                Roll Number *
-              </Text>
-              <View className="flex-row items-center bg-secondary rounded-xl px-4 py-4 border border-border">
-                <Hash size={20} color="#666666" />
-                <TextInput
-                  className="flex-1 ml-3 text-base text-foreground"
-                  placeholder="e.g., 21CSE001"
-                  placeholderTextColor="#999"
-                  value={formData.rollNumber}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, rollNumber: text.toUpperCase() }))}
-                  autoCapitalize="characters"
-                />
-              </View>
+          <View>
+            <Text className="text-sm font-semibold mb-2 text-foreground">
+              Roll Number {formData.role === 'student' ? '*' : '(optional)'}
+            </Text>
+            <View className="flex-row items-center bg-secondary rounded-xl px-4 py-4 border border-border">
+              <Hash size={20} color="#666666" />
+              <TextInput
+                className="flex-1 ml-3 text-base text-foreground"
+                placeholder="e.g., 21CSE001"
+                placeholderTextColor="#999"
+                value={formData.rollNumber}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, rollNumber: text.toUpperCase() }))}
+                autoCapitalize="characters"
+              />
             </View>
+          </View>
 
           {/* Summary Card */}
           <View className="mt-4 p-4 bg-primary/10 rounded-xl border border-primary/20">
@@ -239,21 +271,21 @@ export default function CreateUserScreen() {
               <View className="flex-row justify-between">
                 <Text className="text-xs text-muted-foreground">Role:</Text>
                 <Text className={`text-xs font-bold ${formData.role === 'admin' ? 'text-purple-500' :
-                    formData.role === 'teacher' ? 'text-green-500' : 'text-blue-500'
+                  formData.role === 'teacher' ? 'text-green-500' : 'text-blue-500'
                   }`}>
                   {formData.role.toUpperCase()}
                 </Text>
               </View>
               <View className="flex-row justify-between">
                 <Text className="text-xs text-muted-foreground">Department:</Text>
-                <Text className="text-xs font-semibold text-foreground">{formData.department}</Text>
+                <Text className="text-xs font-semibold text-foreground">{getDepartmentName(formData.department_id)}</Text>
               </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-xs text-muted-foreground">Roll Number:</Text>
-                  <Text className="text-xs font-semibold text-foreground">
-                    {formData.rollNumber || '-'}
-                  </Text>
-                </View>
+              <View className="flex-row justify-between">
+                <Text className="text-xs text-muted-foreground">Roll Number:</Text>
+                <Text className="text-xs font-semibold text-foreground">
+                  {formData.rollNumber || '-'}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -281,4 +313,3 @@ export default function CreateUserScreen() {
     </View>
   );
 }
-

@@ -1,6 +1,7 @@
 const db = require("../config/database");
 const { createNotification } = require("./notificationController");
 const { sendTestSubmissionEmail } = require("../services/mcpEmailClient");
+const { broadcastLiveUpdate } = require("../websocket");
 
 // Start test attempt
 exports.startAttempt = async (req, res) => {
@@ -148,6 +149,9 @@ exports.startAttempt = async (req, res) => {
 
 		console.log("✅ Attempt created successfully:", result.rows[0].id);
 
+		// Broadcast new attempt to live attempters view
+		await broadcastLiveUpdate(test_id);
+
 		res.status(201).json({
 			message: "Test started successfully",
 			attempt: result.rows[0],
@@ -231,6 +235,9 @@ exports.submitAnswer = async (req, res) => {
 				points_earned,
 			],
 		);
+
+		// Broadcast update to live attempters view
+		await broadcastLiveUpdate(attempt_id);
 
 		res.json({
 			message: "Answer saved successfully",
@@ -362,6 +369,9 @@ exports.submitAttempt = async (req, res) => {
 			// Don't fail the submission if certificate issuance fails
 			console.error("Failed to auto-issue certificate:", certError);
 		}
+
+		// Broadcast status change to live attempters view
+		await broadcastLiveUpdate(attempt.test_id);
 
 		res.json({
 			message: "Test submitted successfully",

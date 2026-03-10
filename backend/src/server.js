@@ -306,21 +306,27 @@ const server = app.listen(PORT, () => {
   `);
 });
 
-// Graceful shutdown
-process.on("SIGTERM", () => {
-	logger.info("SIGTERM received, shutting down gracefully");
-	server.close(() => {
-		logger.info("Process terminated");
-		process.exit(0);
-	});
-});
+// Initialize WebSocket
+const { initWebSocket } = require("./websocket");
+initWebSocket(server);
 
-process.on("SIGINT", () => {
-	logger.info("SIGINT received, shutting down gracefully");
+// Graceful shutdown
+const shutdown = () => {
+	logger.info("Shutdown signal received, closing server...");
+	
+	// Force close after 3 seconds if connections are hanging
+	setTimeout(() => {
+		logger.error("Could not close connections in time, forcefully shutting down");
+		process.exit(1);
+	}, 3000);
+
 	server.close(() => {
 		logger.info("Process terminated");
 		process.exit(0);
 	});
-});
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 module.exports = app;
