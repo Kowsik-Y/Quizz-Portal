@@ -96,7 +96,7 @@ graph TD
     subgraph "External Providers"
         LLM["AI Models (OpenAI/Anthropic)"]
         SMTP["SMTP Mail Server (SendGrid/AWS SES)"]
-        SMSProvider["SMS Gateway (Twilio)"]
+        SMSProvider["SMS Gateway"]
         
         AILogic <-->|API Calls| LLM
         NotificationService -->|Send Emails| SMTP
@@ -148,4 +148,5 @@ To run the project locally, please refer to the detailed instructions in the res
 
 1. **[Backend Setup](backend/README.md)**: Includes instructions for setting up the PostgreSQL database (Neon or local), installing dependencies, running migrations, and starting the Express server.
 2. **[Native App Setup](native/README.md)**: Includes instructions for installing Expo dependencies, starting the Metro bundler, and launching the mobile application on a simulator or device.
+
 
