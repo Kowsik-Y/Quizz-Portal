@@ -145,8 +145,8 @@ graph TD
 ## 🚀 Getting Started
 
 To run the project locally, please refer to the detailed instructions in the respective directories:
-
 1. **[Backend Setup](backend/README.md)**: Includes instructions for setting up the PostgreSQL database (Neon or local), installing dependencies, running migrations, and starting the Express server.
 2. **[Native App Setup](native/README.md)**: Includes instructions for installing Expo dependencies, starting the Metro bundler, and launching the mobile application on a simulator or device.
+
 
 
